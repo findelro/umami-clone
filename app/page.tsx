@@ -115,15 +115,27 @@ export default function Home() {
         </div>
       ) : (
         <>
-          {/* Domains Stats */}
-          <StatsCard title={`Top ${MAX_DOMAINS_TO_SHOW} Domains`}>
-            <StatsTable data={domainsData} nameKey="domain" />
-          </StatsCard>
+          {/* Domains and Referrers Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Domains Stats */}
+            <StatsCard title={`Top ${MAX_DOMAINS_TO_SHOW} Domains`}>
+              <TableWithPercentage 
+                data={domainsData} 
+                title="Domains"
+                nameKey="domain"
+              />
+            </StatsCard>
 
-          {/* Referrers Stats */}
-          <StatsCard title="Referrers">
-            <StatsTable data={referrersData} nameKey="referrer" namePlaceholder="Direct / None" />
-          </StatsCard>
+            {/* Referrers Stats */}
+            <StatsCard title="Referrers">
+              <TableWithPercentage 
+                data={referrersData} 
+                title="Referrers"
+                nameKey="referrer"
+                namePlaceholder="Direct / None"
+              />
+            </StatsCard>
+          </div>
 
           {/* Stats Tables Row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -12,6 +12,7 @@ interface TableWithPercentageProps<T extends TableData> {
   nameKey: keyof T;
   showFlags?: boolean;
   className?: string;
+  namePlaceholder?: string;
 }
 
 export default function TableWithPercentage<T extends TableData>({
@@ -20,6 +21,7 @@ export default function TableWithPercentage<T extends TableData>({
   nameKey,
   showFlags = false,
   className = '',
+  namePlaceholder = 'Unknown',
 }: TableWithPercentageProps<T>) {
   if (!data || data.length === 0) {
     return <div className="text-gray-500 text-center py-4">No data available</div>;
@@ -45,10 +47,10 @@ export default function TableWithPercentage<T extends TableData>({
                 {showFlags ? (
                   <div className="flex items-center">
                     <span className="mr-2 w-5 text-center">{getCountryFlag(String(item[nameKey]))}</span>
-                    <span>{item[nameKey]}</span>
+                    <span>{item[nameKey] || namePlaceholder}</span>
                   </div>
                 ) : (
-                  <span>{item[nameKey]}</span>
+                  <span>{item[nameKey] || namePlaceholder}</span>
                 )}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
