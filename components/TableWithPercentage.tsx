@@ -1,0 +1,106 @@
+import React from 'react';
+
+interface TableData {
+  [key: string]: any;
+  visitors: number;
+  percentage: number;
+}
+
+interface TableWithPercentageProps<T extends TableData> {
+  data: T[];
+  title: string;
+  nameKey: keyof T;
+  showFlags?: boolean;
+  className?: string;
+}
+
+export default function TableWithPercentage<T extends TableData>({
+  data,
+  title,
+  nameKey,
+  showFlags = false,
+  className = '',
+}: TableWithPercentageProps<T>) {
+  if (!data || data.length === 0) {
+    return <div className="text-gray-500 text-center py-4">No data available</div>;
+  }
+
+  return (
+    <div className={`overflow-x-auto ${className}`}>
+      <table className="w-full divide-y divide-gray-100">
+        <thead className="bg-white">
+          <tr>
+            <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
+              {title}
+            </th>
+            <th scope="col" className="px-4 py-3 text-right text-sm font-semibold text-gray-900 tracking-wider">
+              Visitors
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-100">
+          {data.map((item, index) => (
+            <tr key={index} className="hover:bg-gray-50">
+              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                {showFlags ? (
+                  <div className="flex items-center">
+                    <span className="mr-2 w-5 text-center">{getCountryFlag(String(item[nameKey]))}</span>
+                    <span>{item[nameKey]}</span>
+                  </div>
+                ) : (
+                  <span>{item[nameKey]}</span>
+                )}
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
+                <div className="relative flex items-center justify-end h-full">
+                  <span className="font-semibold text-gray-900 pr-[52px]">
+                    {item.visitors.toLocaleString()}
+                  </span>
+                  <div className="absolute right-[40px] top-1/2 transform -translate-y-1/2 w-px h-5 bg-gray-900"></div>
+                  <div className="absolute right-0 top-1/2 transform -translate-y-1/2">
+                    {/* Container for percentage and bar */}
+                    <div className="relative flex items-center">
+                      {/* Bar graph extending to the right */}
+                      <div className="absolute left-0 w-[120px]">
+                        <div 
+                          className="absolute top-1/2 -translate-y-1/2 left-0 h-5 bg-blue-50"
+                          style={{ 
+                            width: `${(item.percentage / data[0].percentage) * 100}%`,
+                          }}
+                        ></div>
+                      </div>
+                      {/* Percentage text */}
+                      <span className="relative z-10 w-[40px] text-center text-gray-900 px-1 py-0.5">
+                        {item.percentage.toFixed(0)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {data.length > 10 && (
+        <div className="flex justify-center items-center py-3">
+          <button className="flex items-center text-sm text-gray-500 hover:text-gray-700">
+            More <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Helper function to get country flag emoji
+function getCountryFlag(countryCode: string): string {
+  if (!countryCode || countryCode.length !== 2) {
+    return '🏴';
+  }
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0));
+  
+  return String.fromCodePoint(...codePoints);
+} 
