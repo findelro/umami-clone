@@ -27,6 +27,9 @@ export default function TableWithPercentage<T extends TableData>({
     return <div className="text-gray-500 text-center py-4">No data available</div>;
   }
 
+  // Sort data by visitors in descending order
+  const sortedData = [...data].sort((a, b) => b.visitors - a.visitors);
+
   return (
     <div className={`overflow-x-auto ${className}`}>
       <table className="w-full divide-y divide-gray-100">
@@ -41,16 +44,16 @@ export default function TableWithPercentage<T extends TableData>({
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-100">
-          {data.map((item, index) => (
+          {sortedData.map((item, index) => (
             <tr key={index} className="hover:bg-gray-50">
               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                 {showFlags ? (
                   <div className="flex items-center">
                     <span className="mr-2 w-5 text-center">{getCountryFlag(String(item[nameKey]))}</span>
-                    <span>{item[nameKey] || namePlaceholder}</span>
+                    <span>{String(item[nameKey]).toUpperCase() === 'ZZ' ? namePlaceholder : (item[nameKey] || namePlaceholder)}</span>
                   </div>
                 ) : (
-                  <span>{item[nameKey] || namePlaceholder}</span>
+                  <span>{String(item[nameKey]).toUpperCase() === 'ZZ' ? namePlaceholder : (item[nameKey] || namePlaceholder)}</span>
                 )}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
@@ -99,6 +102,12 @@ function getCountryFlag(countryCode: string): string {
   if (!countryCode || countryCode.length !== 2) {
     return '🏴';
   }
+  
+  // Special case for "ZZ" - return white flag
+  if (countryCode.toUpperCase() === 'ZZ') {
+    return '🏳️';
+  }
+  
   const codePoints = countryCode
     .toUpperCase()
     .split('')
