@@ -5,6 +5,9 @@ export interface PageView {
   country: string;
   city: string;
   user_agent: string;
+  browser_normalized: string;
+  os_normalized: string;
+  device_normalized: string;
   referrer: string;
   domain: string;
   path: string;

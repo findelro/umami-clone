@@ -103,61 +103,21 @@ export const getReferrerStats = async (startDate: string, endDate: string): Prom
   return results.sort((a, b) => b.views - a.views);
 };
 
-// Helper function to parse User Agent
-const parseUserAgent = (userAgent: string) => {
-  const browser = userAgent.match(/(chrome|safari|firefox|edge|opera|msie|trident)/i)?.[0]?.toLowerCase() || 'other';
-  const isWebview = userAgent.includes('WebView') || userAgent.includes('wv');
-  
-  let os = 'other';
-  if (userAgent.includes('Windows')) {
-    if (userAgent.includes('Windows NT 10.0')) os = 'Windows 10/11';
-    else if (userAgent.includes('Windows NT 6.3')) os = 'Windows 8.1';
-    else if (userAgent.includes('Windows NT 6.2')) os = 'Windows 8';
-    else if (userAgent.includes('Windows NT 6.1')) os = 'Windows 7';
-    else os = 'Windows';
-  } else if (userAgent.includes('Macintosh') || userAgent.includes('Mac OS X')) {
-    os = 'macOS';
-  } else if (userAgent.includes('Linux') && !userAgent.includes('Android')) {
-    os = 'Linux';
-  } else if (userAgent.includes('Android')) {
-    os = 'Android';
-  } else if (userAgent.includes('iOS') || userAgent.includes('iPhone') || userAgent.includes('iPad')) {
-    os = 'iOS';
-  } else if (userAgent.includes('Chrome OS')) {
-    os = 'ChromeOS';
-  }
-  
-  let device = 'Desktop';
-  if (userAgent.includes('Mobile')) {
-    device = 'Mobile';
-  } else if (userAgent.includes('Tablet') || userAgent.includes('iPad')) {
-    device = 'Tablet';
-  } else if (userAgent.includes('TV')) {
-    device = 'TV';
-  }
-  
-  return {
-    browser: isWebview ? `${browser} (webview)` : browser,
-    os,
-    device
-  };
-};
-
 // Get browser stats
 export const getBrowserStats = async (startDate: string, endDate: string): Promise<BrowserStats[]> => {
   const { data, error } = await supabase
     .from('metrics_page_views')
-    .select('user_agent, ip')
+    .select('browser_normalized, ip')
     .gte('timestamp', `${startDate}T00:00:00Z`)
     .lte('timestamp', `${endDate}T23:59:59Z`)
-    .not('user_agent', 'is', null);
+    .not('browser_normalized', 'is', null);
   
   if (error || !data || data.length === 0) return [];
   
   const browsers: Record<string, { views: number, ips: Set<string> }> = {};
   
   data.forEach(item => {
-    const { browser } = parseUserAgent(item.user_agent);
+    const browser = item.browser_normalized;
     
     if (!browsers[browser]) {
       browsers[browser] = { views: 0, ips: new Set() };
@@ -183,17 +143,17 @@ export const getBrowserStats = async (startDate: string, endDate: string): Promi
 export const getOSStats = async (startDate: string, endDate: string): Promise<OSStats[]> => {
   const { data, error } = await supabase
     .from('metrics_page_views')
-    .select('user_agent, ip')
+    .select('os_normalized, ip')
     .gte('timestamp', `${startDate}T00:00:00Z`)
     .lte('timestamp', `${endDate}T23:59:59Z`)
-    .not('user_agent', 'is', null);
+    .not('os_normalized', 'is', null);
   
   if (error || !data || data.length === 0) return [];
   
   const operatingSystems: Record<string, { views: number, ips: Set<string> }> = {};
   
   data.forEach(item => {
-    const { os } = parseUserAgent(item.user_agent);
+    const os = item.os_normalized;
     
     if (!operatingSystems[os]) {
       operatingSystems[os] = { views: 0, ips: new Set() };
@@ -219,17 +179,17 @@ export const getOSStats = async (startDate: string, endDate: string): Promise<OS
 export const getDeviceStats = async (startDate: string, endDate: string): Promise<DeviceStats[]> => {
   const { data, error } = await supabase
     .from('metrics_page_views')
-    .select('user_agent, ip')
+    .select('device_normalized, ip')
     .gte('timestamp', `${startDate}T00:00:00Z`)
     .lte('timestamp', `${endDate}T23:59:59Z`)
-    .not('user_agent', 'is', null);
+    .not('device_normalized', 'is', null);
   
   if (error || !data || data.length === 0) return [];
   
   const devices: Record<string, { views: number, ips: Set<string> }> = {};
   
   data.forEach(item => {
-    const { device } = parseUserAgent(item.user_agent);
+    const device = item.device_normalized;
     
     if (!devices[device]) {
       devices[device] = { views: 0, ips: new Set() };
