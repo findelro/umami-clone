@@ -9,6 +9,7 @@ export interface PageView {
   os_normalized: string;
   device_normalized: string;
   referrer: string;
+  referrer_normalized: string;
   domain: string;
   path: string;
 }

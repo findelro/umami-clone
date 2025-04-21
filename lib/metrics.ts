@@ -71,10 +71,10 @@ export const getDomainStats = async (startDate: string, endDate: string): Promis
 export const getReferrerStats = async (startDate: string, endDate: string): Promise<ReferrerStats[]> => {
   const { data, error } = await supabase
     .from('metrics_page_views')
-    .select('referrer, ip')
+    .select('referrer_normalized, ip')
     .gte('timestamp', `${startDate}T00:00:00Z`)
     .lte('timestamp', `${endDate}T23:59:59Z`)
-    .not('referrer', 'is', null);
+    .not('referrer_normalized', 'is', null);
   
   if (error || !data || data.length === 0) return [];
   
@@ -82,11 +82,11 @@ export const getReferrerStats = async (startDate: string, endDate: string): Prom
   const referrerStats: Record<string, { views: number, visitors: Set<string> }> = {};
   
   data.forEach(item => {
-    if (!referrerStats[item.referrer]) {
-      referrerStats[item.referrer] = { views: 0, visitors: new Set() };
+    if (!referrerStats[item.referrer_normalized]) {
+      referrerStats[item.referrer_normalized] = { views: 0, visitors: new Set() };
     }
-    referrerStats[item.referrer].views++;
-    referrerStats[item.referrer].visitors.add(item.ip);
+    referrerStats[item.referrer_normalized].views++;
+    referrerStats[item.referrer_normalized].visitors.add(item.ip);
   });
   
   // Calculate total views
