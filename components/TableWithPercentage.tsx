@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 // Simplified TableData interface that doesn't require an index signature
 interface TableData {
@@ -30,6 +31,77 @@ export default function TableWithPercentage<T extends TableData>({
   // Sort data by visitors in descending order
   const sortedData = [...data].sort((a, b) => b.visitors - a.visitors);
 
+  // Function to get the appropriate icon based on type and name
+  const getIcon = (type: string, name: string): string => {
+    const normalizedName = name.toLowerCase().replace(/\s+/g, '-');
+    
+    // Handle specific icon mappings
+    if (type === 'Browsers') {
+      // Specific browser mappings
+      if (name === 'Chrome (iOS)') return '/images/browser/crios.png';
+      if (name === 'Chrome (webview)') return '/images/browser/chromium-webview.png';
+      if (name === 'Edge (Chromium)') return '/images/browser/edge-chromium.png';
+      if (name === 'Firefox (iOS)') return '/images/browser/fxios.png';
+      if (name === 'Samsung Internet') return '/images/browser/samsung.png';
+      if (name === 'Android WebView') return '/images/browser/android-webview.png';
+      if (name === 'iOS WebView') return '/images/browser/ios-webview.png';
+      
+      // Generic browser mappings
+      if (normalizedName.includes('chrome')) return '/images/browser/chrome.png';
+      if (normalizedName.includes('firefox')) return '/images/browser/firefox.png';
+      if (normalizedName.includes('safari')) return '/images/browser/safari.png';
+      if (normalizedName.includes('edge')) return '/images/browser/edge-chromium.png';
+      if (normalizedName.includes('opera')) return '/images/browser/opera.png';
+      if (normalizedName.includes('yandex')) return '/images/browser/yandexbrowser.png';
+      
+      return `/images/browser/${normalizedName}.png`;
+    } else if (type === 'OS') {
+      // Windows versions
+      if (name.includes('Windows 10') || name.includes('Windows 11')) {
+        return '/images/os/windows-10.png';
+      }
+      if (name.includes('Windows XP')) return '/images/os/windows-xp.png';
+      if (name.includes('Windows 7')) return '/images/os/windows-7.png';
+      if (name.includes('Windows 8.1')) return '/images/os/windows-8-1.png';
+      if (name.includes('Windows 8')) return '/images/os/windows-8.png';
+      if (name.includes('Windows Server 2003')) return '/images/os/windows-server-2003.png';
+      
+      // Other OS
+      if (name === 'macOS' || name.includes('Mac OS')) return '/images/os/mac-os.png';
+      if (name === 'iOS' || name.includes('iPhone OS')) return '/images/os/ios.png';
+      if (name === 'Android') return '/images/os/android-os.png';
+      if (name === 'Linux') return '/images/os/linux.png';
+      if (name === 'Chrome OS') return '/images/os/chrome-os.png';
+      
+      // Normalize for path
+      if (normalizedName.includes('windows')) {
+        return '/images/os/windows-10.png'; // default Windows icon
+      }
+      if (normalizedName.includes('mac')) {
+        return '/images/os/mac-os.png';
+      }
+      if (normalizedName.includes('android')) {
+        return '/images/os/android-os.png';
+      }
+      if (normalizedName.includes('linux')) {
+        return '/images/os/linux.png';
+      }
+      
+      return `/images/os/${normalizedName}.png`;
+    } else if (type === 'Devices') {
+      // Device mappings
+      if (normalizedName.includes('desktop')) return '/images/device/desktop.png';
+      if (normalizedName.includes('laptop')) return '/images/device/laptop.png';
+      if (normalizedName.includes('mobile') || normalizedName.includes('phone')) return '/images/device/mobile.png';
+      if (normalizedName.includes('tablet')) return '/images/device/tablet.png';
+      
+      return `/images/device/${normalizedName}.png`;
+    }
+    
+    // Return unknown icon if no match
+    return '/images/browser/unknown.png';
+  };
+
   return (
     <div className={`overflow-x-auto ${className}`}>
       <table className="w-full divide-y divide-gray-100">
@@ -59,7 +131,28 @@ export default function TableWithPercentage<T extends TableData>({
                       <span>{displayName}</span>
                     </div>
                   ) : (
-                    <span>{displayName}</span>
+                    <div className="flex items-center">
+                      {title === 'Browsers' || title === 'OS' || title === 'Devices' ? (
+                        <div className="w-5 h-5 mr-2 relative flex-shrink-0 flex items-center justify-center">
+                          <Image 
+                            src={getIcon(title, displayName)} 
+                            alt={displayName}
+                            width={16}
+                            height={16}
+                            style={{ 
+                              maxWidth: '100%',
+                              height: 'auto',
+                              objectFit: 'contain' 
+                            }}
+                            onError={(e) => {
+                              // Fallback to unknown icon if the specific icon fails to load
+                              (e.target as HTMLImageElement).src = '/images/browser/unknown.png';
+                            }}
+                          />
+                        </div>
+                      ) : null}
+                      <span>{displayName}</span>
+                    </div>
                   )}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
