@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import DateRangePicker from '@/components/DateRangePicker';
 import StatsCard from '@/components/StatsCard';
-import StatsTable from '@/components/StatsTable';
 import TableWithPercentage from '@/components/TableWithPercentage';
 import dynamic from 'next/dynamic';
 import { 

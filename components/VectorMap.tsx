@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import dynamic from 'next/dynamic';
 import { CountryStats } from '@/lib/types';
 
@@ -8,7 +8,19 @@ const VectorMapNoSSR = dynamic(
     const { VectorMap } = await import('@react-jvectormap/core');
     const { worldMill } = await import('@react-jvectormap/world');
     
-    return function JVectorMap(props: any) {
+    // Define proper props type
+    interface JVectorMapProps {
+      backgroundColor?: string;
+      containerStyle?: React.CSSProperties;
+      containerClassName?: string;
+      regionStyle?: Record<string, unknown>;
+      zoomOnScroll?: boolean;
+      zoomButtons?: boolean;
+      series?: Record<string, unknown>;
+      onRegionTipShow?: (event: Event, label: LabelObject, code: string) => void;
+    }
+    
+    return function JVectorMap(props: JVectorMapProps) {
       return (
         <VectorMap
           {...props}
@@ -96,13 +108,13 @@ export default function InteractiveVectorMap({ data, className = '' }: VectorMap
             }
           ]
         }}
-        onRegionTipShow={(_: Event, label: LabelObject, code: string) => {
+        onRegionTipShow={(event: Event, label: LabelObject, code: string) => {
           const countryName = countryNames[code] || code;
           const visitors = countryData[code] || 0;
           const percent = data.length > 0 
             ? Math.round((visitors / data.reduce((sum, c) => sum + c.visitors, 0)) * 1000) / 10 
             : 0;
-            
+          
           label.html(`
             <div class="bg-white py-1 px-2 shadow-sm rounded border border-gray-100">
               <div class="font-medium">${countryName}</div>

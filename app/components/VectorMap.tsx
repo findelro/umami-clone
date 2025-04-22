@@ -10,6 +10,11 @@ interface VectorMapProps {
   className?: string;
 }
 
+// Define a type for jVectorMap tooltip element
+interface TooltipElement {
+  html: (content?: string) => string;
+}
+
 export default function VectorMap({ data, className = '' }: VectorMapProps) {
   const [isClient, setIsClient] = useState(false);
   
@@ -24,11 +29,6 @@ export default function VectorMap({ data, className = '' }: VectorMapProps) {
       [country]: visitors,
     };
   }, {});
-
-  // Calculate color scale based on data
-  const maxVisitors = data.length > 0 
-    ? Math.max(...data.map(item => item.visitors)) 
-    : 0;
 
   if (!isClient) {
     return <div className={`${className} bg-gray-100 animate-pulse rounded-lg`} />;
@@ -74,9 +74,9 @@ export default function VectorMap({ data, className = '' }: VectorMapProps) {
         onRegionTipShow={(e, el, code) => {
           const countryData = data.find(item => item.country === code);
           if (countryData && el) {
-            const element = el as any;
-            const currentContent = element.html ? element.html() : '';
-            element.html && element.html(
+            const element = el as TooltipElement;
+            const currentContent = element.html();
+            element.html(
               `<div class="tooltip-inner">
                 <b>${currentContent}</b><br />
                 ${countryData.visitors.toLocaleString()} visitors

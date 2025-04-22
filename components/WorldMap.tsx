@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   ComposableMap,
   Geographies,
@@ -6,43 +6,58 @@ import {
   ZoomableGroup
 } from 'react-simple-maps';
 import { CountryStats } from '@/lib/types';
-import FallbackMap from './FallbackMap';
 
-// Use a more reliable source for the world map data
-// We'll use a local fallback for the map data rather than relying on an external fetch
-const WORLD_MAP_DATA = {
-  "type": "Topology",
-  "objects": {
-    "countries": {
-      "type": "GeometryCollection",
-      "geometries": [
-        // This will be empty since we're using FallbackMap component instead
-      ]
-    }
-  }
-};
+// Simple world map GeoJSON URL (using a reliable public source)
+const WORLD_MAP_URL = "https://raw.githubusercontent.com/deldersveld/topojson/master/world-countries.json";
 
 interface WorldMapProps {
   data: CountryStats[];
   className?: string;
 }
 
+// Define a type for the geography objects
 interface GeoFeature {
   rsmKey: string;
+  id?: string;
   properties: {
-    name: string;
-    [key: string]: any;
+    id?: string;
+    name?: string;
+    [key: string]: unknown;
   };
-  [key: string]: any;
 }
 
 export default function WorldMap({ data, className = '' }: WorldMapProps) {
-  // Since we're having issues fetching the map data, we'll directly use the FallbackMap
-  // No need to attempt fetching the external map data which is causing errors
-  
+  // Function to determine fill color based on country data
+  const getFillColor = (geo: GeoFeature) => {
+    const countryCode = geo.properties.id || geo.id;
+    const countryData = data.find(item => item.country === countryCode);
+    return countryData ? '#2563EB' : '#D1D5DB';
+  };
+
   return (
     <div className={className}>
-      <FallbackMap data={data} className="h-full w-full" />
+      <ComposableMap>
+        <ZoomableGroup zoom={1}>
+          <Geographies geography={WORLD_MAP_URL}>
+            {({ geographies }) =>
+              geographies.map(geo => (
+                <Geography
+                  key={geo.rsmKey}
+                  geography={geo}
+                  fill={getFillColor(geo)}
+                  stroke="#FFFFFF"
+                  strokeWidth={0.5}
+                  style={{
+                    default: { outline: 'none' },
+                    hover: { outline: 'none', fill: '#1E40AF' },
+                    pressed: { outline: 'none' }
+                  }}
+                />
+              ))
+            }
+          </Geographies>
+        </ZoomableGroup>
+      </ComposableMap>
     </div>
   );
 } 
