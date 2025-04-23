@@ -102,6 +102,12 @@ export default function TableWithPercentage<T extends TableData>({
     return '/images/browser/unknown.png';
   };
 
+  // Function to get icon dimensions based on icon type
+  const getIconDimensions = () => {
+    // Use consistent 20x20 size for all icon types
+    return { width: 20, height: 20 };
+  };
+
   return (
     <div className={`overflow-x-auto ${className}`}>
       <table className="w-full divide-y divide-gray-100">
@@ -127,7 +133,7 @@ export default function TableWithPercentage<T extends TableData>({
                 <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                   {showFlags ? (
                     <div className="flex items-center">
-                      <span className="mr-2 w-5 text-center">{getCountryFlag(keyValue)}</span>
+                      <span className="mr-2 w-5 h-5 flex items-center justify-center">{getCountryFlag(keyValue)}</span>
                       <span>{displayName}</span>
                     </div>
                   ) : (
@@ -137,12 +143,12 @@ export default function TableWithPercentage<T extends TableData>({
                           <Image 
                             src={getIcon(title, displayName)} 
                             alt={displayName}
-                            width={16}
-                            height={16}
+                            {...getIconDimensions()}
+                            quality={100}
                             style={{ 
-                              maxWidth: '100%',
-                              height: 'auto',
-                              objectFit: 'contain' 
+                              objectFit: 'contain',
+                              width: '100%',
+                              height: '100%'
                             }}
                             onError={(e) => {
                               // Fallback to unknown icon if the specific icon fails to load
