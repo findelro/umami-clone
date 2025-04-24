@@ -22,6 +22,16 @@ export default function DateRangePicker({
   };
 
   // Quick date range presets
+  const selectToday = () => {
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0];
+    
+    onRangeChange(
+      formattedDate,
+      formattedDate
+    );
+  };
+
   const selectLast7Days = () => {
     const end = new Date();
     const start = new Date();
@@ -81,6 +91,13 @@ export default function DateRangePicker({
         />
       </div>
       <div className="flex space-x-2">
+        <button
+          type="button"
+          onClick={selectToday}
+          className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          Today
+        </button>
         <button
           type="button"
           onClick={selectLast7Days}

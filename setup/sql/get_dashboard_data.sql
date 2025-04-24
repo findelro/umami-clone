@@ -1,0 +1,347 @@
+CREATE OR REPLACE FUNCTION public.get_dashboard_data(
+  start_date timestamp with time zone,
+  end_date timestamp with time zone,
+  domains text[] DEFAULT NULL,
+  exclude_self_referrals boolean DEFAULT true,
+  group_referrers_by_domain boolean DEFAULT true,
+  min_views integer DEFAULT 1,
+  max_results_per_section integer DEFAULT 50
+)
+RETURNS JSON
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  result_json JSON;
+  domain_data JSON;
+  referrer_data JSON;
+  browser_data JSON;
+  os_data JSON;
+  device_data JSON;
+  country_data JSON;
+BEGIN
+  -- Get domain stats (no grouping needed as each domain is unique)
+  WITH filtered_views AS (
+    SELECT 
+      pv.domain,
+      pv.ip
+    FROM 
+      metrics_page_views pv
+    WHERE 
+      pv.timestamp >= start_date
+      AND pv.timestamp <= end_date
+      AND (domains IS NULL OR pv.domain = ANY(domains))
+  ),
+  domain_counts AS (
+    SELECT
+      domain,
+      COUNT(*) AS views,
+      COUNT(DISTINCT ip) AS visitors
+    FROM
+      filtered_views
+    GROUP BY
+      domain
+    HAVING
+      COUNT(*) >= min_views
+  ),
+  total_views AS (
+    SELECT 
+      SUM(views) AS total
+    FROM 
+      domain_counts
+  ),
+  domain_result AS (
+    SELECT
+      dc.domain,
+      dc.views,
+      dc.visitors,
+      ROUND((dc.views::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
+    FROM
+      domain_counts dc,
+      total_views tv
+    ORDER BY
+      dc.views DESC
+    LIMIT max_results_per_section
+  )
+  SELECT json_agg(domain_result) INTO domain_data FROM domain_result;
+
+  -- Get referrer stats with grouping
+  WITH filtered_views AS (
+    SELECT 
+      pv.referrer_normalized,
+      pv.domain,
+      pv.ip
+    FROM 
+      metrics_page_views pv
+    WHERE 
+      pv.timestamp >= start_date
+      AND pv.timestamp <= end_date
+      AND pv.referrer_normalized IS NOT NULL
+      AND (domains IS NULL OR pv.domain = ANY(domains))
+      AND (
+        NOT exclude_self_referrals 
+        OR NOT (
+          pv.referrer_normalized = pv.domain
+          OR pv.referrer_normalized LIKE '%.' || pv.domain
+          OR pv.domain LIKE '%.' || pv.referrer_normalized
+        )
+      )
+  ),
+  referrer_counts AS (
+    SELECT
+      CASE
+        WHEN group_referrers_by_domain THEN
+          -- Extract root domain
+          regexp_replace(referrer_normalized, '^.*?([^.]+\\.[^.]+)$', '\\1')
+        ELSE
+          referrer_normalized
+      END AS referrer,
+      COUNT(*) AS views,
+      COUNT(DISTINCT ip) AS visitors
+    FROM
+      filtered_views
+    GROUP BY
+      CASE
+        WHEN group_referrers_by_domain THEN
+          regexp_replace(referrer_normalized, '^.*?([^.]+\\.[^.]+)$', '\\1')
+        ELSE
+          referrer_normalized
+      END
+    HAVING
+      COUNT(*) >= min_views
+  ),
+  total_views AS (
+    SELECT 
+      SUM(views) AS total
+    FROM 
+      referrer_counts
+  ),
+  referrer_result AS (
+    SELECT
+      rc.referrer,
+      rc.views,
+      rc.visitors,
+      ROUND((rc.views::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
+    FROM
+      referrer_counts rc,
+      total_views tv
+    ORDER BY
+      rc.views DESC
+    LIMIT max_results_per_section
+  )
+  SELECT json_agg(referrer_result) INTO referrer_data FROM referrer_result;
+
+  -- Get browser stats with grouping
+  WITH filtered_views AS (
+    SELECT 
+      pv.browser_normalized,
+      pv.domain,
+      pv.ip
+    FROM 
+      metrics_page_views pv
+    WHERE 
+      pv.timestamp >= start_date
+      AND pv.timestamp <= end_date
+      AND pv.browser_normalized IS NOT NULL
+      AND (domains IS NULL OR pv.domain = ANY(domains))
+  ),
+  browser_counts AS (
+    SELECT
+      browser_normalized AS browser,
+      COUNT(*) AS views,
+      COUNT(DISTINCT ip) AS visitors
+    FROM
+      filtered_views
+    GROUP BY
+      browser_normalized
+    HAVING
+      COUNT(*) >= min_views
+  ),
+  total_views AS (
+    SELECT 
+      SUM(views) AS total
+    FROM 
+      browser_counts
+  ),
+  browser_result AS (
+    SELECT
+      bc.browser,
+      bc.views,
+      bc.visitors,
+      ROUND((bc.views::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
+    FROM
+      browser_counts bc,
+      total_views tv
+    ORDER BY
+      bc.views DESC
+    LIMIT max_results_per_section
+  )
+  SELECT json_agg(browser_result) INTO browser_data FROM browser_result;
+
+  -- Get OS stats with grouping
+  WITH filtered_views AS (
+    SELECT 
+      pv.os_normalized,
+      pv.domain,
+      pv.ip
+    FROM 
+      metrics_page_views pv
+    WHERE 
+      pv.timestamp >= start_date
+      AND pv.timestamp <= end_date
+      AND pv.os_normalized IS NOT NULL
+      AND (domains IS NULL OR pv.domain = ANY(domains))
+  ),
+  os_counts AS (
+    SELECT
+      os_normalized AS os,
+      COUNT(*) AS views,
+      COUNT(DISTINCT ip) AS visitors
+    FROM
+      filtered_views
+    GROUP BY
+      os_normalized
+    HAVING
+      COUNT(*) >= min_views
+  ),
+  total_views AS (
+    SELECT 
+      SUM(views) AS total
+    FROM 
+      os_counts
+  ),
+  os_result AS (
+    SELECT
+      oc.os,
+      oc.views,
+      oc.visitors,
+      ROUND((oc.views::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
+    FROM
+      os_counts oc,
+      total_views tv
+    ORDER BY
+      oc.views DESC
+    LIMIT max_results_per_section
+  )
+  SELECT json_agg(os_result) INTO os_data FROM os_result;
+
+  -- Get device stats with grouping
+  WITH filtered_views AS (
+    SELECT 
+      pv.device_normalized,
+      pv.domain,
+      pv.ip
+    FROM 
+      metrics_page_views pv
+    WHERE 
+      pv.timestamp >= start_date
+      AND pv.timestamp <= end_date
+      AND pv.device_normalized IS NOT NULL
+      AND (domains IS NULL OR pv.domain = ANY(domains))
+  ),
+  device_counts AS (
+    SELECT
+      device_normalized AS device,
+      COUNT(*) AS views,
+      COUNT(DISTINCT ip) AS visitors
+    FROM
+      filtered_views
+    GROUP BY
+      device_normalized
+    HAVING
+      COUNT(*) >= min_views
+  ),
+  total_views AS (
+    SELECT 
+      SUM(views) AS total
+    FROM 
+      device_counts
+  ),
+  device_result AS (
+    SELECT
+      dc.device,
+      dc.views,
+      dc.visitors,
+      ROUND((dc.views::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
+    FROM
+      device_counts dc,
+      total_views tv
+    ORDER BY
+      dc.views DESC
+    LIMIT max_results_per_section
+  )
+  SELECT json_agg(device_result) INTO device_data FROM device_result;
+
+  -- Get country stats with grouping
+  WITH filtered_views AS (
+    SELECT 
+      pv.country,
+      pv.domain,
+      pv.ip
+    FROM 
+      metrics_page_views pv
+    WHERE 
+      pv.timestamp >= start_date
+      AND pv.timestamp <= end_date
+      AND pv.country IS NOT NULL
+      AND (domains IS NULL OR pv.domain = ANY(domains))
+  ),
+  country_counts AS (
+    SELECT
+      country,
+      COUNT(*) AS views,
+      COUNT(DISTINCT ip) AS visitors
+    FROM
+      filtered_views
+    GROUP BY
+      country
+    HAVING
+      COUNT(*) >= min_views
+  ),
+  total_views AS (
+    SELECT 
+      SUM(views) AS total
+    FROM 
+      country_counts
+  ),
+  country_result AS (
+    SELECT
+      cc.country,
+      cc.views,
+      cc.visitors,
+      ROUND((cc.views::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
+    FROM
+      country_counts cc,
+      total_views tv
+    ORDER BY
+      cc.views DESC
+    LIMIT max_results_per_section
+  )
+  SELECT json_agg(country_result) INTO country_data FROM country_result;
+
+  -- Compile the complete dashboard data
+  result_json = json_build_object(
+    'domains', COALESCE(domain_data, '[]'::json),
+    'referrers', COALESCE(referrer_data, '[]'::json),
+    'browsers', COALESCE(browser_data, '[]'::json),
+    'os', COALESCE(os_data, '[]'::json),
+    'devices', COALESCE(device_data, '[]'::json),
+    'countries', COALESCE(country_data, '[]'::json)
+  );
+  
+  RETURN result_json;
+END;
+$$;
+
+-- Grant execute permission on the function
+GRANT EXECUTE ON FUNCTION public.get_dashboard_data(
+  timestamp with time zone,
+  timestamp with time zone,
+  text[],
+  boolean,
+  boolean,
+  integer,
+  integer
+) TO anon;
+
+-- Grant read-only access to the metrics_page_views table
+GRANT SELECT ON public.metrics_page_views TO anon; 

@@ -70,14 +70,43 @@ export default function Home() {
         }
         
         const result = await response.json();
+        const dashboardData = result.data;
         
         // Update state with the fetched data
-        setDomainsData(result.data.domains.slice(0, MAX_DOMAINS_TO_SHOW));
-        setReferrersData(result.data.referrers);
-        setBrowsersData(result.data.browsers);
-        setOsData(result.data.os);
-        setDevicesData(result.data.devices);
-        setCountriesData(result.data.countries);
+        // Note: The domain structure is the same, but other data types don't have domain property anymore
+        setDomainsData(dashboardData.domains.slice(0, MAX_DOMAINS_TO_SHOW));
+        
+        // Map the data to match the expected structure if necessary
+        const mappedReferrers = dashboardData.referrers.map((item: Omit<ReferrerStats, 'domain'>) => ({
+          ...item,
+          domain: '' 
+        }));
+        
+        const mappedBrowsers = dashboardData.browsers.map((item: Omit<BrowserStats, 'domain'>) => ({
+          ...item,
+          domain: '' 
+        }));
+        
+        const mappedOs = dashboardData.os.map((item: Omit<OSStats, 'domain'>) => ({
+          ...item,
+          domain: '' 
+        }));
+        
+        const mappedDevices = dashboardData.devices.map((item: Omit<DeviceStats, 'domain'>) => ({
+          ...item,
+          domain: '' 
+        }));
+        
+        const mappedCountries = dashboardData.countries.map((item: Omit<CountryStats, 'domain'>) => ({
+          ...item,
+          domain: '' 
+        }));
+        
+        setReferrersData(mappedReferrers);
+        setBrowsersData(mappedBrowsers);
+        setOsData(mappedOs);
+        setDevicesData(mappedDevices);
+        setCountriesData(mappedCountries);
       } catch (err) {
         console.error('Error fetching stats:', err);
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
