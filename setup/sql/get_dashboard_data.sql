@@ -30,6 +30,10 @@ BEGIN
       pv.timestamp >= start_date
       AND pv.timestamp <= end_date
       AND (domains IS NULL OR pv.domain = ANY(domains))
+      AND NOT EXISTS (
+        SELECT 1 FROM domains_under_contract duc 
+        WHERE duc.domain = pv.domain
+      )
   ),
   domain_counts AS (
     SELECT
@@ -77,6 +81,10 @@ BEGIN
       AND pv.timestamp <= end_date
       AND pv.referrer_normalized IS NOT NULL
       AND (domains IS NULL OR pv.domain = ANY(domains))
+      AND NOT EXISTS (
+        SELECT 1 FROM domains_under_contract duc 
+        WHERE duc.domain = pv.domain
+      )
       AND (
         NOT exclude_self_referrals 
         OR NOT (
@@ -143,6 +151,10 @@ BEGIN
       AND pv.timestamp <= end_date
       AND pv.browser_normalized IS NOT NULL
       AND (domains IS NULL OR pv.domain = ANY(domains))
+      AND NOT EXISTS (
+        SELECT 1 FROM domains_under_contract duc 
+        WHERE duc.domain = pv.domain
+      )
   ),
   browser_counts AS (
     SELECT
@@ -190,6 +202,10 @@ BEGIN
       AND pv.timestamp <= end_date
       AND pv.os_normalized IS NOT NULL
       AND (domains IS NULL OR pv.domain = ANY(domains))
+      AND NOT EXISTS (
+        SELECT 1 FROM domains_under_contract duc 
+        WHERE duc.domain = pv.domain
+      )
   ),
   os_counts AS (
     SELECT
@@ -237,6 +253,10 @@ BEGIN
       AND pv.timestamp <= end_date
       AND pv.device_normalized IS NOT NULL
       AND (domains IS NULL OR pv.domain = ANY(domains))
+      AND NOT EXISTS (
+        SELECT 1 FROM domains_under_contract duc 
+        WHERE duc.domain = pv.domain
+      )
   ),
   device_counts AS (
     SELECT
@@ -284,6 +304,10 @@ BEGIN
       AND pv.timestamp <= end_date
       AND pv.country IS NOT NULL
       AND (domains IS NULL OR pv.domain = ANY(domains))
+      AND NOT EXISTS (
+        SELECT 1 FROM domains_under_contract duc 
+        WHERE duc.domain = pv.domain
+      )
   ),
   country_counts AS (
     SELECT
@@ -344,4 +368,6 @@ GRANT EXECUTE ON FUNCTION public.get_dashboard_data(
 ) TO anon;
 
 -- Grant read-only access to the metrics_page_views table
-GRANT SELECT ON public.metrics_page_views TO anon; 
+GRANT SELECT ON public.metrics_page_views TO anon;
+-- Grant read-only access to the domains_under_contract table
+GRANT SELECT ON public.domains_under_contract TO anon; 
