@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import DateRangePicker from '@/components/DateRangePicker';
 import StatsCard from '@/components/StatsCard';
 import TableWithPercentage from '@/components/TableWithPercentage';
+import Header from './components/Header';
 import dynamic from 'next/dynamic';
 import { 
   DomainStats, 
@@ -119,107 +120,114 @@ export default function Home() {
   }, [dateRange.startDate, dateRange.endDate]);
 
   return (
-    <div className="space-y-6">
-      {/* Date Range Picker */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-gray-900">Analytics Overview</h2>
-        <DateRangePicker
-          startDate={dateRange.startDate}
-          endDate={dateRange.endDate}
-          onRangeChange={handleDateRangeChange}
-        />
-      </div>
-
-      {isLoading ? (
-        // Loading state
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-        </div>
-      ) : error ? (
-        // Error state
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
-          <strong className="font-bold">Error: </strong>
-          <span className="block sm:inline">{error}</span>
-        </div>
-      ) : (
-        <>
-          {/* Domains and Referrers Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Domains Stats */}
-            <StatsCard title={`Top ${MAX_DOMAINS_TO_SHOW} Domains`}>
-              <TableWithPercentage 
-                data={domainsData} 
-                title="Domains"
-                nameKey="domain"
-              />
-            </StatsCard>
-
-            {/* Referrers Stats */}
-            <StatsCard title="Referrers">
-              <TableWithPercentage 
-                data={referrersData} 
-                title="Referrers"
-                nameKey="referrer"
-                namePlaceholder="Direct / None"
+    <>
+      <Header title="Domain Analytics Dashboard" />
+      <main>
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            {/* Date Range Picker */}
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-900">Analytics Overview</h2>
+              <DateRangePicker
                 startDate={dateRange.startDate}
                 endDate={dateRange.endDate}
+                onRangeChange={handleDateRangeChange}
               />
-            </StatsCard>
-          </div>
+            </div>
 
-          {/* Stats Tables Row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Browsers Stats */}
-            <StatsCard title="Browsers">
-              <TableWithPercentage 
-                data={browsersData} 
-                title="Browsers"
-                nameKey="browser"
-              />
-            </StatsCard>
-
-            {/* OS Stats */}
-            <StatsCard title="Operating Systems">
-              <TableWithPercentage 
-                data={osData} 
-                title="OS"
-                nameKey="os"
-              />
-            </StatsCard>
-
-            {/* Devices Stats */}
-            <StatsCard title="Devices">
-              <TableWithPercentage 
-                data={devicesData} 
-                title="Devices"
-                nameKey="device"
-              />
-            </StatsCard>
-          </div>
-
-          {/* World Map and Countries side by side */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            {/* Map Visualization */}
-            <StatsCard title="Visitor Locations" className="lg:col-span-3">
-              <div className="h-96">
-                <InteractiveVectorMap data={countriesData} className="h-full w-full" />
+            {isLoading ? (
+              // Loading state
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
               </div>
-            </StatsCard>
-
-            {/* Countries Stats */}
-            <StatsCard title="Countries" className="lg:col-span-2">
-              <div className="h-96 overflow-auto">
-                <TableWithPercentage 
-                  data={countriesData} 
-                  title="Countries"
-                  nameKey="country"
-                  showFlags={true}
-                />
+            ) : error ? (
+              // Error state
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
+                <strong className="font-bold">Error: </strong>
+                <span className="block sm:inline">{error}</span>
               </div>
-            </StatsCard>
+            ) : (
+              <>
+                {/* Domains and Referrers Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Domains Stats */}
+                  <StatsCard title={`Top ${MAX_DOMAINS_TO_SHOW} Domains`}>
+                    <TableWithPercentage 
+                      data={domainsData} 
+                      title="Domains"
+                      nameKey="domain"
+                    />
+                  </StatsCard>
+
+                  {/* Referrers Stats */}
+                  <StatsCard title="Referrers">
+                    <TableWithPercentage 
+                      data={referrersData} 
+                      title="Referrers"
+                      nameKey="referrer"
+                      namePlaceholder="Direct / None"
+                      startDate={dateRange.startDate}
+                      endDate={dateRange.endDate}
+                    />
+                  </StatsCard>
+                </div>
+
+                {/* Stats Tables Row */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Browsers Stats */}
+                  <StatsCard title="Browsers">
+                    <TableWithPercentage 
+                      data={browsersData} 
+                      title="Browsers"
+                      nameKey="browser"
+                    />
+                  </StatsCard>
+
+                  {/* OS Stats */}
+                  <StatsCard title="Operating Systems">
+                    <TableWithPercentage 
+                      data={osData} 
+                      title="OS"
+                      nameKey="os"
+                    />
+                  </StatsCard>
+
+                  {/* Devices Stats */}
+                  <StatsCard title="Devices">
+                    <TableWithPercentage 
+                      data={devicesData} 
+                      title="Devices"
+                      nameKey="device"
+                    />
+                  </StatsCard>
+                </div>
+
+                {/* World Map and Countries side by side */}
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                  {/* Map Visualization */}
+                  <StatsCard title="Visitor Locations" className="lg:col-span-3">
+                    <div className="h-96">
+                      <InteractiveVectorMap data={countriesData} className="h-full w-full" />
+                    </div>
+                  </StatsCard>
+
+                  {/* Countries Stats */}
+                  <StatsCard title="Countries" className="lg:col-span-2">
+                    <div className="h-96 overflow-auto">
+                      <TableWithPercentage 
+                        data={countriesData} 
+                        title="Countries"
+                        nameKey="country"
+                        showFlags={true}
+                      />
+                    </div>
+                  </StatsCard>
+                </div>
+              </>
+            )}
           </div>
-        </>
-      )}
-    </div>
+        </div>
+      </main>
+    </>
   );
 }

@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import DateRangePicker from '@/components/DateRangePicker';
 import StatsCard from '@/components/StatsCard';
+import Header from '../components/Header';
 import { ReferrerTargetStats } from '@/lib/types';
 
 function ReferrerContent() {
@@ -64,105 +65,109 @@ function ReferrerContent() {
   }, [referrerDomain, dateRange.startDate, dateRange.endDate]);
 
   return (
-    <div className="space-y-6">
-      {/* Header with Back Button */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <Link 
-            href={`/?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`}
-            className="flex items-center text-blue-600 hover:text-blue-800"
-          >
-            <svg 
-              className="w-5 h-5 mr-1" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24" 
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M10 19l-7-7m0 0l7-7m-7 7h18" 
+    <>
+      <Header title={`Referrer Analysis: ${referrerDomain || 'Unknown'}`} />
+      <main>
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            {/* Back button and date picker */}
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-2">
+                <Link 
+                  href={`/?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`}
+                  className="flex items-center text-blue-600 hover:text-blue-800"
+                >
+                  <svg 
+                    className="w-5 h-5 mr-1" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M10 19l-7-7m0 0l7-7m-7 7h18" 
+                    />
+                  </svg>
+                  Back to Overview
+                </Link>
+              </div>
+              <DateRangePicker
+                startDate={dateRange.startDate}
+                endDate={dateRange.endDate}
+                onRangeChange={handleDateRangeChange}
               />
-            </svg>
-            Back to Overview
-          </Link>
-          <h2 className="text-xl font-semibold text-gray-900">
-            Referrer Details: {referrerDomain}
-          </h2>
-        </div>
-        <DateRangePicker
-          startDate={dateRange.startDate}
-          endDate={dateRange.endDate}
-          onRangeChange={handleDateRangeChange}
-        />
-      </div>
-
-      {isLoading ? (
-        // Loading state
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-        </div>
-      ) : error ? (
-        // Error state
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
-          <strong className="font-bold">Error: </strong>
-          <span className="block sm:inline">{error}</span>
-        </div>
-      ) : (
-        <StatsCard title="Referrer Pages and Target Pages">
-          {referrerData.length === 0 ? (
-            <div className="text-gray-500 text-center py-8">
-              No data available for this referrer domain in the selected date range
             </div>
-          ) : (
-            <table className="w-full divide-y divide-gray-100">
-              <thead className="bg-white">
-                <tr>
-                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
-                    Referrer Page
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
-                    Target Page
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-right text-sm font-semibold text-gray-900 tracking-wider">
-                    Visitors
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-right text-sm font-semibold text-gray-900 tracking-wider">
-                    Views
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-right text-sm font-semibold text-gray-900 tracking-wider">
-                    %
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-100">
-                {referrerData.map((item, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900 max-w-xs truncate" title={item.referrerPage}>
-                      {item.referrerPage}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" title={item.targetPage}>
-                      {item.targetPage}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-right text-gray-900 font-semibold">
-                      {item.visitors.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-right text-gray-700">
-                      {item.views.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-right text-gray-700">
-                      {item.percentage.toFixed(1)}%
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </StatsCard>
-      )}
-    </div>
+
+            {isLoading ? (
+              // Loading state
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+              </div>
+            ) : error ? (
+              // Error state
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
+                <strong className="font-bold">Error: </strong>
+                <span className="block sm:inline">{error}</span>
+              </div>
+            ) : (
+              <StatsCard title="Referrer Pages and Target Pages">
+                {referrerData.length === 0 ? (
+                  <div className="text-gray-500 text-center py-8">
+                    No data available for this referrer domain in the selected date range
+                  </div>
+                ) : (
+                  <table className="w-full divide-y divide-gray-100">
+                    <thead className="bg-white">
+                      <tr>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                          Referrer Page
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                          Target Page
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-right text-sm font-semibold text-gray-900 tracking-wider">
+                          Visitors
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-right text-sm font-semibold text-gray-900 tracking-wider">
+                          Views
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-right text-sm font-semibold text-gray-900 tracking-wider">
+                          %
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-100">
+                      {referrerData.map((item, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 text-sm font-medium text-gray-900 max-w-xs truncate" title={item.referrerPage}>
+                            {item.referrerPage}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" title={item.targetPage}>
+                            {item.targetPage}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-right text-gray-900 font-semibold">
+                            {item.visitors.toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-right text-gray-700">
+                            {item.views.toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-right text-gray-700">
+                            {item.percentage.toFixed(1)}%
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </StatsCard>
+            )}
+          </div>
+        </div>
+      </main>
+    </>
   );
 }
 
