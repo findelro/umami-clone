@@ -151,7 +151,7 @@ export default function Home() {
                 {/* Domains and Referrers Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Domains Stats */}
-                  <StatsCard title={`Top ${MAX_DOMAINS_TO_SHOW} Domains`}>
+                  <StatsCard>
                     <TableWithPercentage 
                       data={domainsData} 
                       title="Domains"
@@ -160,7 +160,7 @@ export default function Home() {
                   </StatsCard>
 
                   {/* Referrers Stats */}
-                  <StatsCard title="Referrers">
+                  <StatsCard>
                     <TableWithPercentage 
                       data={referrersData} 
                       title="Referrers"
@@ -175,7 +175,7 @@ export default function Home() {
                 {/* Stats Tables Row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Browsers Stats */}
-                  <StatsCard title="Browsers">
+                  <StatsCard>
                     <TableWithPercentage 
                       data={browsersData} 
                       title="Browsers"
@@ -184,7 +184,7 @@ export default function Home() {
                   </StatsCard>
 
                   {/* OS Stats */}
-                  <StatsCard title="Operating Systems">
+                  <StatsCard>
                     <TableWithPercentage 
                       data={osData} 
                       title="OS"
@@ -193,7 +193,7 @@ export default function Home() {
                   </StatsCard>
 
                   {/* Devices Stats */}
-                  <StatsCard title="Devices">
+                  <StatsCard>
                     <TableWithPercentage 
                       data={devicesData} 
                       title="Devices"
@@ -212,7 +212,7 @@ export default function Home() {
                   </StatsCard>
 
                   {/* Countries Stats */}
-                  <StatsCard title="Countries" className="lg:col-span-2">
+                  <StatsCard className="lg:col-span-2">
                     <div className="h-96 overflow-auto">
                       <TableWithPercentage 
                         data={countriesData} 

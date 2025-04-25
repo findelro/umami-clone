@@ -90,7 +90,7 @@ function ReferrerContent() {
                 <span className="block sm:inline">{error}</span>
               </div>
             ) : (
-              <StatsCard title="Referrer Pages and Target Pages">
+              <StatsCard>
                 {referrerData.length === 0 ? (
                   <div className="text-gray-500 text-center py-8">
                     No data available for this referrer domain in the selected date range
