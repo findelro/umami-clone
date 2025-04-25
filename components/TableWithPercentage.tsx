@@ -1,5 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 // Simplified TableData interface that doesn't require an index signature
 interface TableData {
@@ -14,6 +16,9 @@ interface TableWithPercentageProps<T extends TableData> {
   showFlags?: boolean;
   className?: string;
   namePlaceholder?: string;
+  startDate?: string;
+  endDate?: string;
+  onItemClick?: (item: T) => void;
 }
 
 export default function TableWithPercentage<T extends TableData>({
@@ -23,7 +28,13 @@ export default function TableWithPercentage<T extends TableData>({
   showFlags = false,
   className = '',
   namePlaceholder = 'Unknown',
+  startDate,
+  endDate,
+  onItemClick,
 }: TableWithPercentageProps<T>) {
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
+
   if (!data || data.length === 0) {
     return <div className="text-gray-500 text-center py-4">No data available</div>;
   }
@@ -108,6 +119,71 @@ export default function TableWithPercentage<T extends TableData>({
     return { width: 20, height: 20 };
   };
 
+  // Function to check if item is a referrer
+  const isReferrer = () => {
+    return title === 'Referrers' && nameKey === 'referrer';
+  };
+
+  // Function to render the name cell based on item type
+  const renderNameCell = (item: T, index: number, keyValue: string, displayName: string) => {
+    // Determine if item should be clickable
+    const isClickableReferrer = isReferrer() && isHomePage && displayName !== namePlaceholder;
+    
+    if (isClickableReferrer) {
+      const href = `/referrer?domain=${encodeURIComponent(displayName)}${startDate ? `&startDate=${startDate}` : ''}${endDate ? `&endDate=${endDate}` : ''}`;
+      
+      return (
+        <Link href={href} className="flex items-center hover:text-blue-600">
+          {title === 'Browsers' || title === 'OS' || title === 'Devices' ? (
+            <div className="w-5 h-5 mr-2 relative flex-shrink-0 flex items-center justify-center">
+              <Image 
+                src={getIcon(title, displayName)} 
+                alt={displayName}
+                {...getIconDimensions()}
+                quality={100}
+                style={{ 
+                  objectFit: 'contain',
+                  width: '100%',
+                  height: '100%'
+                }}
+                onError={(e) => {
+                  // Fallback to unknown icon if the specific icon fails to load
+                  (e.target as HTMLImageElement).src = '/images/browser/unknown.png';
+                }}
+              />
+            </div>
+          ) : null}
+          <span>{displayName}</span>
+        </Link>
+      );
+    }
+    
+    return (
+      <div className="flex items-center">
+        {title === 'Browsers' || title === 'OS' || title === 'Devices' ? (
+          <div className="w-5 h-5 mr-2 relative flex-shrink-0 flex items-center justify-center">
+            <Image 
+              src={getIcon(title, displayName)} 
+              alt={displayName}
+              {...getIconDimensions()}
+              quality={100}
+              style={{ 
+                objectFit: 'contain',
+                width: '100%',
+                height: '100%'
+              }}
+              onError={(e) => {
+                // Fallback to unknown icon if the specific icon fails to load
+                (e.target as HTMLImageElement).src = '/images/browser/unknown.png';
+              }}
+            />
+          </div>
+        ) : null}
+        <span>{displayName}</span>
+      </div>
+    );
+  };
+
   return (
     <div className={`overflow-x-auto ${className}`}>
       <table className="w-full divide-y divide-gray-100">
@@ -129,7 +205,11 @@ export default function TableWithPercentage<T extends TableData>({
             const displayName = isUnknown ? namePlaceholder : keyValue;
             
             return (
-              <tr key={index} className="hover:bg-gray-50">
+              <tr 
+                key={index} 
+                className="hover:bg-gray-50"
+                onClick={() => onItemClick && onItemClick(item)}
+              >
                 <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                   {showFlags ? (
                     <div className="flex items-center">
@@ -137,28 +217,7 @@ export default function TableWithPercentage<T extends TableData>({
                       <span>{displayName}</span>
                     </div>
                   ) : (
-                    <div className="flex items-center">
-                      {title === 'Browsers' || title === 'OS' || title === 'Devices' ? (
-                        <div className="w-5 h-5 mr-2 relative flex-shrink-0 flex items-center justify-center">
-                          <Image 
-                            src={getIcon(title, displayName)} 
-                            alt={displayName}
-                            {...getIconDimensions()}
-                            quality={100}
-                            style={{ 
-                              objectFit: 'contain',
-                              width: '100%',
-                              height: '100%'
-                            }}
-                            onError={(e) => {
-                              // Fallback to unknown icon if the specific icon fails to load
-                              (e.target as HTMLImageElement).src = '/images/browser/unknown.png';
-                            }}
-                          />
-                        </div>
-                      ) : null}
-                      <span>{displayName}</span>
-                    </div>
+                    renderNameCell(item, index, keyValue, displayName)
                   )}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-right text-sm">

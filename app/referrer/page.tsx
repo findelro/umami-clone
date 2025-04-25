@@ -1,0 +1,179 @@
+'use client';
+
+import { useState, useEffect, Suspense } from 'react';
+import { format } from 'date-fns';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import DateRangePicker from '@/components/DateRangePicker';
+import StatsCard from '@/components/StatsCard';
+import { ReferrerTargetStats } from '@/lib/types';
+
+function ReferrerContent() {
+  const searchParams = useSearchParams();
+  const referrerDomain = searchParams.get('domain');
+
+  // Date range state
+  const [dateRange, setDateRange] = useState({
+    startDate: searchParams.get('startDate') || format(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+    endDate: searchParams.get('endDate') || format(new Date(), 'yyyy-MM-dd')
+  });
+
+  // UI state
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [referrerData, setReferrerData] = useState<ReferrerTargetStats[]>([]);
+
+  // Handle date range change
+  const handleDateRangeChange = (startDate: string, endDate: string) => {
+    setDateRange({ startDate, endDate });
+  };
+
+  // Fetch referrer target data
+  useEffect(() => {
+    const fetchReferrerData = async () => {
+      if (!referrerDomain) {
+        setError("No referrer domain specified");
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const response = await fetch(
+          `/api/stats/referrer?referrerDomain=${encodeURIComponent(referrerDomain)}&startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
+        );
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch data');
+        }
+        
+        const result = await response.json();
+        setReferrerData(result.data);
+      } catch (err) {
+        console.error('Error fetching referrer data:', err);
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReferrerData();
+  }, [referrerDomain, dateRange.startDate, dateRange.endDate]);
+
+  return (
+    <div className="space-y-6">
+      {/* Header with Back Button */}
+      <div className="flex justify-between items-center">
+        <div className="flex items-center space-x-2">
+          <Link 
+            href={`/?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`}
+            className="flex items-center text-blue-600 hover:text-blue-800"
+          >
+            <svg 
+              className="w-5 h-5 mr-1" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24" 
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M10 19l-7-7m0 0l7-7m-7 7h18" 
+              />
+            </svg>
+            Back to Overview
+          </Link>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Referrer Details: {referrerDomain}
+          </h2>
+        </div>
+        <DateRangePicker
+          startDate={dateRange.startDate}
+          endDate={dateRange.endDate}
+          onRangeChange={handleDateRangeChange}
+        />
+      </div>
+
+      {isLoading ? (
+        // Loading state
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+      ) : error ? (
+        // Error state
+        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+      ) : (
+        <StatsCard title="Referrer Pages and Target Pages">
+          {referrerData.length === 0 ? (
+            <div className="text-gray-500 text-center py-8">
+              No data available for this referrer domain in the selected date range
+            </div>
+          ) : (
+            <table className="w-full divide-y divide-gray-100">
+              <thead className="bg-white">
+                <tr>
+                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                    Referrer Page
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                    Target Page
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-right text-sm font-semibold text-gray-900 tracking-wider">
+                    Visitors
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-right text-sm font-semibold text-gray-900 tracking-wider">
+                    Views
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-right text-sm font-semibold text-gray-900 tracking-wider">
+                    %
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-100">
+                {referrerData.map((item, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900 max-w-xs truncate" title={item.referrerPage}>
+                      {item.referrerPage}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" title={item.targetPage}>
+                      {item.targetPage}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right text-gray-900 font-semibold">
+                      {item.visitors.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right text-gray-700">
+                      {item.views.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right text-gray-700">
+                      {item.percentage.toFixed(1)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </StatsCard>
+      )}
+    </div>
+  );
+}
+
+export default function ReferrerDrillDown() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    }>
+      <ReferrerContent />
+    </Suspense>
+  );
+} 

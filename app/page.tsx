@@ -161,6 +161,8 @@ export default function Home() {
                 title="Referrers"
                 nameKey="referrer"
                 namePlaceholder="Direct / None"
+                startDate={dateRange.startDate}
+                endDate={dateRange.endDate}
               />
             </StatsCard>
           </div>

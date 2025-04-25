@@ -28,6 +28,14 @@ export interface ReferrerStats {
   percentage: number;
 }
 
+export interface ReferrerTargetStats {
+  referrerPage: string;
+  targetPage: string;
+  views: number;
+  visitors: number;
+  percentage: number;
+}
+
 export interface BrowserStats {
   browser: string;
   views: number;
