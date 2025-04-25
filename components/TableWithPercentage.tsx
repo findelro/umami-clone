@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { countries } from 'countries-list';
 
 // Simplified TableData interface that doesn't require an index signature
 interface TableData {
@@ -214,7 +215,7 @@ export default function TableWithPercentage<T extends TableData>({
                   {showFlags ? (
                     <div className="flex items-center">
                       <span className="mr-2 w-5 h-5 flex items-center justify-center">{getCountryFlag(keyValue)}</span>
-                      <span>{displayName}</span>
+                      <span>{keyValue === 'ZZ' ? 'Unknown' : (countries[keyValue.toUpperCase() as keyof typeof countries]?.name || 'Unknown')}</span>
                     </div>
                   ) : (
                     renderNameCell(item, index, keyValue, displayName)
