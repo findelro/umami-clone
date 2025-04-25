@@ -70,30 +70,8 @@ function ReferrerContent() {
       <main>
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="space-y-6">
-            {/* Back button and date picker */}
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-2">
-                <Link 
-                  href={`/?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`}
-                  className="flex items-center text-blue-600 hover:text-blue-800"
-                >
-                  <svg 
-                    className="w-5 h-5 mr-1" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24" 
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M10 19l-7-7m0 0l7-7m-7 7h18" 
-                    />
-                  </svg>
-                  Back to Overview
-                </Link>
-              </div>
+            {/* Date picker */}
+            <div className="flex justify-end items-center">
               <DateRangePicker
                 startDate={dateRange.startDate}
                 endDate={dateRange.endDate}
