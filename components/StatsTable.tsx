@@ -29,8 +29,8 @@ export default function StatsTable<T extends StatsData>({
   }
 
   return (
-    <div className={`overflow-x-auto ${className}`}>
-      <table className="w-full divide-y divide-gray-100">
+    <div className={`${className}`}>
+      <table className="min-w-full divide-y divide-gray-100">
         {showHeaders && (
           <thead className="bg-white">
             <tr>

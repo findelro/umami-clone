@@ -185,8 +185,8 @@ export default function TableWithPercentage<T extends TableData>({
   };
 
   return (
-    <div className={`overflow-x-auto ${className}`}>
-      <table className="w-full divide-y divide-gray-100">
+    <div className={`${className}`}>
+      <table className="min-w-full divide-y divide-gray-100">
         <thead className="bg-white">
           <tr>
             <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
