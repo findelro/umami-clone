@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from 'react';
 import { format } from 'date-fns';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import DateRangePicker from '@/components/DateRangePicker';
 import StatsCard from '@/components/StatsCard';
 import Header from '../components/Header';
