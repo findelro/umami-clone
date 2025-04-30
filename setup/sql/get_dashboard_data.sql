@@ -22,34 +22,34 @@ BEGIN
   -- Get domain stats (no grouping needed as each domain is unique)
   WITH filtered_views AS (
     SELECT 
-      pv.domain,
+      pv.domain_normalized,
       pv.ip
     FROM 
       metrics_page_views pv
     WHERE 
       pv.timestamp >= start_date
       AND pv.timestamp <= end_date
-      AND (domains IS NULL OR pv.domain = ANY(domains))
+      AND (domains IS NULL OR pv.domain_normalized = ANY(domains))
       AND NOT EXISTS (
         SELECT 1 FROM domains_under_contract duc 
-        WHERE duc.domain = pv.domain
+        WHERE duc.domain = pv.domain_normalized
       )
   ),
   domain_counts AS (
     SELECT
-      domain,
+      domain_normalized AS domain,
       COUNT(*) AS views,
       COUNT(DISTINCT ip) AS visitors
     FROM
       filtered_views
     GROUP BY
-      domain
+      domain_normalized
     HAVING
       COUNT(*) >= min_views
   ),
-  total_views AS (
+  total_visitors AS (
     SELECT 
-      SUM(views) AS total
+      SUM(visitors) AS total
     FROM 
       domain_counts
   ),
@@ -58,10 +58,10 @@ BEGIN
       dc.domain,
       dc.views,
       dc.visitors,
-      ROUND((dc.views::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
+      ROUND((dc.visitors::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
     FROM
       domain_counts dc,
-      total_views tv
+      total_visitors tv
     ORDER BY
       dc.views DESC
     LIMIT max_results_per_section
@@ -72,7 +72,7 @@ BEGIN
   WITH filtered_views AS (
     SELECT 
       pv.referrer_normalized,
-      pv.domain,
+      pv.domain_normalized,
       pv.ip
     FROM 
       metrics_page_views pv
@@ -80,17 +80,17 @@ BEGIN
       pv.timestamp >= start_date
       AND pv.timestamp <= end_date
       AND pv.referrer_normalized IS NOT NULL
-      AND (domains IS NULL OR pv.domain = ANY(domains))
+      AND (domains IS NULL OR pv.domain_normalized = ANY(domains))
       AND NOT EXISTS (
         SELECT 1 FROM domains_under_contract duc 
-        WHERE duc.domain = pv.domain
+        WHERE duc.domain = pv.domain_normalized
       )
       AND (
         NOT exclude_self_referrals 
         OR NOT (
-          pv.referrer_normalized = pv.domain
-          OR pv.referrer_normalized LIKE '%.' || pv.domain
-          OR pv.domain LIKE '%.' || pv.referrer_normalized
+          pv.referrer_normalized = pv.domain_normalized
+          OR pv.referrer_normalized LIKE '%.' || pv.domain_normalized
+          OR pv.domain_normalized LIKE '%.' || pv.referrer_normalized
         )
       )
   ),
@@ -117,9 +117,9 @@ BEGIN
     HAVING
       COUNT(*) >= min_views
   ),
-  total_views AS (
+  total_visitors AS (
     SELECT 
-      SUM(views) AS total
+      SUM(visitors) AS total
     FROM 
       referrer_counts
   ),
@@ -128,10 +128,10 @@ BEGIN
       rc.referrer,
       rc.views,
       rc.visitors,
-      ROUND((rc.views::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
+      ROUND((rc.visitors::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
     FROM
       referrer_counts rc,
-      total_views tv
+      total_visitors tv
     ORDER BY
       rc.views DESC
     LIMIT max_results_per_section
@@ -142,7 +142,7 @@ BEGIN
   WITH filtered_views AS (
     SELECT 
       pv.browser_normalized,
-      pv.domain,
+      pv.domain_normalized,
       pv.ip
     FROM 
       metrics_page_views pv
@@ -150,10 +150,10 @@ BEGIN
       pv.timestamp >= start_date
       AND pv.timestamp <= end_date
       AND pv.browser_normalized IS NOT NULL
-      AND (domains IS NULL OR pv.domain = ANY(domains))
+      AND (domains IS NULL OR pv.domain_normalized = ANY(domains))
       AND NOT EXISTS (
         SELECT 1 FROM domains_under_contract duc 
-        WHERE duc.domain = pv.domain
+        WHERE duc.domain = pv.domain_normalized
       )
   ),
   browser_counts AS (
@@ -168,9 +168,9 @@ BEGIN
     HAVING
       COUNT(*) >= min_views
   ),
-  total_views AS (
+  total_visitors AS (
     SELECT 
-      SUM(views) AS total
+      SUM(visitors) AS total
     FROM 
       browser_counts
   ),
@@ -179,10 +179,10 @@ BEGIN
       bc.browser,
       bc.views,
       bc.visitors,
-      ROUND((bc.views::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
+      ROUND((bc.visitors::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
     FROM
       browser_counts bc,
-      total_views tv
+      total_visitors tv
     ORDER BY
       bc.views DESC
     LIMIT max_results_per_section
@@ -193,7 +193,7 @@ BEGIN
   WITH filtered_views AS (
     SELECT 
       pv.os_normalized,
-      pv.domain,
+      pv.domain_normalized,
       pv.ip
     FROM 
       metrics_page_views pv
@@ -201,10 +201,10 @@ BEGIN
       pv.timestamp >= start_date
       AND pv.timestamp <= end_date
       AND pv.os_normalized IS NOT NULL
-      AND (domains IS NULL OR pv.domain = ANY(domains))
+      AND (domains IS NULL OR pv.domain_normalized = ANY(domains))
       AND NOT EXISTS (
         SELECT 1 FROM domains_under_contract duc 
-        WHERE duc.domain = pv.domain
+        WHERE duc.domain = pv.domain_normalized
       )
   ),
   os_counts AS (
@@ -219,9 +219,9 @@ BEGIN
     HAVING
       COUNT(*) >= min_views
   ),
-  total_views AS (
+  total_visitors AS (
     SELECT 
-      SUM(views) AS total
+      SUM(visitors) AS total
     FROM 
       os_counts
   ),
@@ -230,10 +230,10 @@ BEGIN
       oc.os,
       oc.views,
       oc.visitors,
-      ROUND((oc.views::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
+      ROUND((oc.visitors::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
     FROM
       os_counts oc,
-      total_views tv
+      total_visitors tv
     ORDER BY
       oc.views DESC
     LIMIT max_results_per_section
@@ -244,7 +244,7 @@ BEGIN
   WITH filtered_views AS (
     SELECT 
       pv.device_normalized,
-      pv.domain,
+      pv.domain_normalized,
       pv.ip
     FROM 
       metrics_page_views pv
@@ -252,10 +252,10 @@ BEGIN
       pv.timestamp >= start_date
       AND pv.timestamp <= end_date
       AND pv.device_normalized IS NOT NULL
-      AND (domains IS NULL OR pv.domain = ANY(domains))
+      AND (domains IS NULL OR pv.domain_normalized = ANY(domains))
       AND NOT EXISTS (
         SELECT 1 FROM domains_under_contract duc 
-        WHERE duc.domain = pv.domain
+        WHERE duc.domain = pv.domain_normalized
       )
   ),
   device_counts AS (
@@ -270,9 +270,9 @@ BEGIN
     HAVING
       COUNT(*) >= min_views
   ),
-  total_views AS (
+  total_visitors AS (
     SELECT 
-      SUM(views) AS total
+      SUM(visitors) AS total
     FROM 
       device_counts
   ),
@@ -281,10 +281,10 @@ BEGIN
       dc.device,
       dc.views,
       dc.visitors,
-      ROUND((dc.views::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
+      ROUND((dc.visitors::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
     FROM
       device_counts dc,
-      total_views tv
+      total_visitors tv
     ORDER BY
       dc.views DESC
     LIMIT max_results_per_section
@@ -295,7 +295,7 @@ BEGIN
   WITH filtered_views AS (
     SELECT 
       pv.country,
-      pv.domain,
+      pv.domain_normalized,
       pv.ip
     FROM 
       metrics_page_views pv
@@ -303,10 +303,10 @@ BEGIN
       pv.timestamp >= start_date
       AND pv.timestamp <= end_date
       AND pv.country IS NOT NULL
-      AND (domains IS NULL OR pv.domain = ANY(domains))
+      AND (domains IS NULL OR pv.domain_normalized = ANY(domains))
       AND NOT EXISTS (
         SELECT 1 FROM domains_under_contract duc 
-        WHERE duc.domain = pv.domain
+        WHERE duc.domain = pv.domain_normalized
       )
   ),
   country_counts AS (
@@ -321,9 +321,9 @@ BEGIN
     HAVING
       COUNT(*) >= min_views
   ),
-  total_views AS (
+  total_visitors AS (
     SELECT 
-      SUM(views) AS total
+      SUM(visitors) AS total
     FROM 
       country_counts
   ),
@@ -332,10 +332,10 @@ BEGIN
       cc.country,
       cc.views,
       cc.visitors,
-      ROUND((cc.views::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
+      ROUND((cc.visitors::numeric / NULLIF(tv.total, 0)) * 100, 1) AS percentage
     FROM
       country_counts cc,
-      total_views tv
+      total_visitors tv
     ORDER BY
       cc.views DESC
     LIMIT max_results_per_section
