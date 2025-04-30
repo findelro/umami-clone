@@ -235,7 +235,7 @@ export default function TableWithPercentage<T extends TableData>({
                           <div 
                             className="absolute top-1/2 -translate-y-1/2 left-0 h-5 bg-blue-50"
                             style={{ 
-                              width: `${(item.percentage / data[0].percentage) * 100}%`,
+                              width: `${item.percentage}%`,
                             }}
                           ></div>
                         </div>
