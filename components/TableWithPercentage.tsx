@@ -141,7 +141,7 @@ export default function TableWithPercentage<T extends TableData>({
                 src={getIcon(title, displayName)} 
                 alt={displayName}
                 {...getIconDimensions()}
-                quality={100}
+                unoptimized
                 style={{ 
                   objectFit: 'contain',
                   width: '100%',
@@ -167,7 +167,7 @@ export default function TableWithPercentage<T extends TableData>({
               src={getIcon(title, displayName)} 
               alt={displayName}
               {...getIconDimensions()}
-              quality={100}
+              unoptimized
               style={{ 
                 objectFit: 'contain',
                 width: '100%',
