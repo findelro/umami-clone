@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
+    const maxResults = searchParams.get('maxResults');
     
     if (!startDate || !endDate) {
       return NextResponse.json(
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
             excludeSelfReferrals: true,
             groupReferrersByDomain: true,
             minViews: 1,
-            maxResultsPerSection: 100
+            maxResultsPerSection: maxResults ? parseInt(maxResults) : 200
           }
         );
         

@@ -15,9 +15,7 @@ import {
   DeviceStats, 
   CountryStats 
 } from '@/lib/types';
-
-// Constants
-const MAX_DOMAINS_TO_SHOW = 30;
+import { APP_CONFIG } from '@/lib/config';
 
 // Dynamically import the VectorMap component with no SSR to prevent hydration errors
 const InteractiveVectorMap = dynamic(() => import('@/components/VectorMap'), {
@@ -32,7 +30,7 @@ const InteractiveVectorMap = dynamic(() => import('@/components/VectorMap'), {
 export default function Home() {
   // Date range state
   const [dateRange, setDateRange] = useState({
-    startDate: format(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+    startDate: format(new Date(Date.now() - APP_CONFIG.API.DEFAULT_DATE_RANGE_DAYS * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
     endDate: format(new Date(), 'yyyy-MM-dd')
   });
 
@@ -62,7 +60,7 @@ export default function Home() {
       try {
         // Fetch all stats from the API
         const response = await fetch(
-          `/api/stats?type=all&startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
+          `/api/stats?type=all&startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&maxResults=${APP_CONFIG.API.MAX_RESULTS_PER_SECTION}`
         );
         
         if (!response.ok) {
@@ -75,7 +73,7 @@ export default function Home() {
         
         // Update state with the fetched data
         // Note: The domain structure is the same, but other data types don't have domain property anymore
-        setDomainsData(dashboardData.domains.slice(0, MAX_DOMAINS_TO_SHOW));
+        setDomainsData(dashboardData.domains);
         
         // Map the data to match the expected structure if necessary
         const mappedReferrers = dashboardData.referrers.map((item: Omit<ReferrerStats, 'domain'>) => ({
@@ -138,7 +136,7 @@ export default function Home() {
             {isLoading ? (
               // Loading state
               <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                <div className={`animate-spin rounded-full border-b-2 border-blue-500 ${APP_CONFIG.UI.LOADING_SPINNER_SIZE.MEDIUM}`}></div>
               </div>
             ) : error ? (
               // Error state
@@ -156,6 +154,8 @@ export default function Home() {
                       data={domainsData} 
                       title="Domains"
                       nameKey="domain"
+                      initialItemsToShow={APP_CONFIG.TABLE_PAGINATION.DOMAINS.INITIAL_ITEMS}
+                      itemsPerLoad={APP_CONFIG.TABLE_PAGINATION.DOMAINS.ITEMS_PER_LOAD}
                     />
                   </StatsCard>
 
@@ -168,6 +168,8 @@ export default function Home() {
                       namePlaceholder="Direct / None"
                       startDate={dateRange.startDate}
                       endDate={dateRange.endDate}
+                      initialItemsToShow={APP_CONFIG.TABLE_PAGINATION.REFERRERS.INITIAL_ITEMS}
+                      itemsPerLoad={APP_CONFIG.TABLE_PAGINATION.REFERRERS.ITEMS_PER_LOAD}
                     />
                   </StatsCard>
                 </div>
@@ -180,6 +182,7 @@ export default function Home() {
                       data={browsersData} 
                       title="Browsers"
                       nameKey="browser"
+                      showAllByDefault={true}
                     />
                   </StatsCard>
 
@@ -189,6 +192,7 @@ export default function Home() {
                       data={osData} 
                       title="OS"
                       nameKey="os"
+                      showAllByDefault={true}
                     />
                   </StatsCard>
 
@@ -198,6 +202,7 @@ export default function Home() {
                       data={devicesData} 
                       title="Devices"
                       nameKey="device"
+                      showAllByDefault={true}
                     />
                   </StatsCard>
                 </div>
@@ -219,6 +224,8 @@ export default function Home() {
                         title="Countries"
                         nameKey="country"
                         showFlags={true}
+                        initialItemsToShow={APP_CONFIG.TABLE_PAGINATION.COUNTRIES.INITIAL_ITEMS}
+                        itemsPerLoad={APP_CONFIG.TABLE_PAGINATION.COUNTRIES.ITEMS_PER_LOAD}
                       />
                     </div>
                   </StatsCard>

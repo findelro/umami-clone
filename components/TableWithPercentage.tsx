@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -20,6 +20,9 @@ interface TableWithPercentageProps<T extends TableData> {
   startDate?: string;
   endDate?: string;
   onItemClick?: (item: T) => void;
+  initialItemsToShow?: number;
+  itemsPerLoad?: number;
+  showAllByDefault?: boolean;
 }
 
 export default function TableWithPercentage<T extends TableData>({
@@ -32,9 +35,17 @@ export default function TableWithPercentage<T extends TableData>({
   startDate,
   endDate,
   onItemClick,
+  initialItemsToShow = 10,
+  itemsPerLoad = 20,
+  showAllByDefault = false,
 }: TableWithPercentageProps<T>) {
   const pathname = usePathname();
   const isHomePage = pathname === '/';
+  
+  // State for progressive loading
+  const [itemsToShow, setItemsToShow] = useState(
+    showAllByDefault ? data.length : initialItemsToShow
+  );
 
   if (!data || data.length === 0) {
     return <div className="text-gray-500 text-center py-4">No data available</div>;
@@ -42,6 +53,25 @@ export default function TableWithPercentage<T extends TableData>({
 
   // Sort data by visitors in descending order
   const sortedData = [...data].sort((a, b) => b.visitors - a.visitors);
+  
+  // Get the data to display based on current state
+  const displayedData = sortedData.slice(0, itemsToShow);
+  const hasMoreData = itemsToShow < sortedData.length;
+
+  // Function to load more items
+  const handleLoadMore = () => {
+    setItemsToShow(prev => Math.min(prev + itemsPerLoad, sortedData.length));
+  };
+
+  // Function to show all items
+  const handleShowAll = () => {
+    setItemsToShow(sortedData.length);
+  };
+
+  // Function to show less items (back to initial)
+  const handleShowLess = () => {
+    setItemsToShow(initialItemsToShow);
+  };
 
   // Function to get the appropriate icon based on type and name
   const getIcon = (type: string, name: string): string => {
@@ -199,7 +229,7 @@ export default function TableWithPercentage<T extends TableData>({
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-100">
-          {sortedData.map((item, index) => {
+          {displayedData.map((item, index) => {
             // Safely convert the key value to string
             const keyValue = String(item[nameKey] || '');
             const isUnknown = keyValue.toUpperCase() === 'ZZ' || !keyValue;
@@ -252,11 +282,49 @@ export default function TableWithPercentage<T extends TableData>({
           })}
         </tbody>
       </table>
-      {data.length > 10 && (
-        <div className="flex justify-center items-center py-3">
-          <button className="flex items-center text-sm text-gray-500 hover:text-gray-700">
-            More <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-          </button>
+      {/* Pagination footer - only show if there's more data or we're showing more than initial */}
+      {(hasMoreData || (itemsToShow > initialItemsToShow && !showAllByDefault)) && (
+        <div className="flex justify-center items-center py-3 space-x-2">
+          {hasMoreData && (
+            <>
+              <button 
+                className="flex items-center px-3 py-1.5 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200" 
+                onClick={handleLoadMore}
+                aria-label={`Load ${itemsPerLoad} more items`}
+              >
+                More
+                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <span className="text-gray-400" aria-hidden="true">|</span>
+              <button 
+                className="flex items-center px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors duration-200" 
+                onClick={handleShowAll}
+                aria-label={`Show all ${sortedData.length} items`}
+              >
+                Show All ({sortedData.length - itemsToShow} remaining)
+              </button>
+            </>
+          )}
+          {itemsToShow >= sortedData.length && sortedData.length > initialItemsToShow && !showAllByDefault && (
+            <>
+              <button 
+                className="flex items-center px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors duration-200" 
+                onClick={handleShowLess}
+                aria-label={`Show only first ${initialItemsToShow} items`}
+              >
+                Show Less
+                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
+              <span className="text-gray-400" aria-hidden="true">|</span>
+              <span className="text-sm text-gray-500">
+                Showing all {sortedData.length} items
+              </span>
+            </>
+          )}
         </div>
       )}
     </div>
