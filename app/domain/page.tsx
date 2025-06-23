@@ -173,7 +173,7 @@ function DomainContent() {
                                   {hit.ip}
                                 </td>
                                 <td className="px-4 py-3 text-sm text-gray-700">
-                                  {format(new Date(hit.timestamp), 'MMM dd, yyyy HH:mm:ss')}
+                                  {format(new Date(hit.timestamp), 'MM/dd/yy HH:mm')}
                                 </td>
                               </tr>
                             ))}
