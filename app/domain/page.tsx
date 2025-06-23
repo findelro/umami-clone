@@ -5,8 +5,27 @@ import { format } from 'date-fns';
 import { useSearchParams } from 'next/navigation';
 import DateRangePicker from '@/components/DateRangePicker';
 import StatsCard from '@/components/StatsCard';
+import TableWithPercentage from '@/components/TableWithPercentage';
 import Header from '../components/Header';
-import { DomainHit } from '@/lib/types';
+import dynamic from 'next/dynamic';
+import { 
+  DomainHit, 
+  BrowserStats, 
+  OSStats, 
+  DeviceStats, 
+  CountryStats 
+} from '@/lib/types';
+import { APP_CONFIG } from '@/lib/config';
+
+// Dynamically import the VectorMap component with no SSR to prevent hydration errors
+const InteractiveVectorMap = dynamic(() => import('@/components/VectorMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-96">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    </div>
+  )
+});
 
 function DomainContent() {
   const searchParams = useSearchParams();
@@ -20,6 +39,10 @@ function DomainContent() {
 
   // Data state
   const [hits, setHits] = useState<DomainHit[]>([]);
+  const [browsersData, setBrowsersData] = useState<BrowserStats[]>([]);
+  const [osData, setOsData] = useState<OSStats[]>([]);
+  const [devicesData, setDevicesData] = useState<DeviceStats[]>([]);
+  const [countriesData, setCountriesData] = useState<CountryStats[]>([]);
 
   // UI state
   const [isLoading, setIsLoading] = useState(true);
@@ -30,9 +53,9 @@ function DomainContent() {
     setDateRange({ startDate, endDate });
   };
 
-  // Fetch domain hits
+  // Fetch domain stats
   useEffect(() => {
-    const fetchDomainHits = async () => {
+    const fetchDomainStats = async () => {
       if (!domain) {
         setError("No domain specified");
         setIsLoading(false);
@@ -44,7 +67,7 @@ function DomainContent() {
       
       try {
         const response = await fetch(
-          `/api/stats/domain?domain=${encodeURIComponent(domain)}&startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
+          `/api/stats/domain?domain=${encodeURIComponent(domain)}&startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&type=all`
         );
         
         if (!response.ok) {
@@ -53,16 +76,22 @@ function DomainContent() {
         }
         
         const result = await response.json();
-        setHits(result.data);
+        const domainData = result.data;
+        
+        setHits(domainData.hits);
+        setBrowsersData(domainData.browsers);
+        setOsData(domainData.os);
+        setDevicesData(domainData.devices);
+        setCountriesData(domainData.countries);
       } catch (err) {
-        console.error('Error fetching domain hits:', err);
+        console.error('Error fetching domain stats:', err);
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchDomainHits();
+    fetchDomainStats();
   }, [domain, dateRange.startDate, dateRange.endDate]);
 
   return (
@@ -72,7 +101,10 @@ function DomainContent() {
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="space-y-6">
             {/* Date picker */}
-            <div className="flex justify-end items-center">
+            <div className="flex justify-between items-center">
+              <h2 className="text-sm font-medium text-gray-700">
+                {hits.length} page views found
+              </h2>
               <DateRangePicker
                 startDate={dateRange.startDate}
                 endDate={dateRange.endDate}
@@ -81,62 +113,121 @@ function DomainContent() {
             </div>
 
             {isLoading ? (
-              // Loading state
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
               </div>
             ) : error ? (
-              // Error state
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
                 <strong className="font-bold">Error: </strong>
                 <span className="block sm:inline">{error}</span>
               </div>
             ) : (
-              // Data display
-              <StatsCard>
-                {hits.length === 0 ? (
-                  <div className="text-gray-500 text-center py-8">
-                    No hits found for this domain in the selected date range
-                  </div>
-                ) : (
-                  <table className="w-full divide-y divide-gray-100">
-                    <thead className="bg-white">
-                      <tr>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
-                          Page
-                        </th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
-                          Referrer
-                        </th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
-                          IP
-                        </th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
-                          Date
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-100">
-                      {hits.map((hit, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm font-medium text-gray-900 max-w-xs truncate" title={hit.page}>
-                            {hit.page}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" title={hit.referrer || ''}>
-                            {hit.referrer || ''}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-700 font-mono">
-                            {hit.ip}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-700">
-                            {format(new Date(hit.timestamp), 'MMM dd, yyyy HH:mm:ss')}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </StatsCard>
+              <>
+                {/* Individual Hits Table */}
+                <StatsCard>
+                  {hits.length === 0 ? (
+                    <div className="text-gray-500 text-center py-8">
+                      No page views found in the selected date range
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full divide-y divide-gray-100">
+                        <thead className="bg-white">
+                          <tr>
+                            <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                              Page
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                              Referrer
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                              IP
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                              Date
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-100">
+                          {hits.map((hit, index) => (
+                            <tr key={index} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 text-sm font-medium text-gray-900 max-w-xs truncate" title={hit.page}>
+                                {hit.page}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" title={hit.referrer || ''}>
+                                {hit.referrer || ''}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-700 font-mono">
+                                {hit.ip}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-700">
+                                {format(new Date(hit.timestamp), 'MMM dd, yyyy HH:mm:ss')}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </StatsCard>
+
+                {/* Stats Tables Row - Reusing the same components from homepage */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Browsers Stats */}
+                  <StatsCard>
+                    <TableWithPercentage 
+                      data={browsersData} 
+                      title="Browsers"
+                      nameKey="browser"
+                      showAllByDefault={true}
+                    />
+                  </StatsCard>
+
+                  {/* OS Stats */}
+                  <StatsCard>
+                    <TableWithPercentage 
+                      data={osData} 
+                      title="OS"
+                      nameKey="os"
+                      showAllByDefault={true}
+                    />
+                  </StatsCard>
+
+                  {/* Devices Stats */}
+                  <StatsCard>
+                    <TableWithPercentage 
+                      data={devicesData} 
+                      title="Devices"
+                      nameKey="device"
+                      showAllByDefault={true}
+                    />
+                  </StatsCard>
+                </div>
+
+                {/* World Map and Countries side by side - Reusing the same components from homepage */}
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                  {/* Map Visualization */}
+                  <StatsCard title="Visitor Locations" className="lg:col-span-3">
+                    <div className="h-96">
+                      <InteractiveVectorMap data={countriesData} className="h-full w-full" />
+                    </div>
+                  </StatsCard>
+
+                  {/* Countries Stats */}
+                  <StatsCard className="lg:col-span-2">
+                    <div className="h-96 overflow-auto">
+                      <TableWithPercentage 
+                        data={countriesData} 
+                        title="Countries"
+                        nameKey="country"
+                        showFlags={true}
+                        initialItemsToShow={APP_CONFIG.TABLE_PAGINATION.COUNTRIES.INITIAL_ITEMS}
+                        itemsPerLoad={APP_CONFIG.TABLE_PAGINATION.COUNTRIES.ITEMS_PER_LOAD}
+                      />
+                    </div>
+                  </StatsCard>
+                </div>
+              </>
             )}
           </div>
         </div>

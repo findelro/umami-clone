@@ -263,4 +263,150 @@ export const getCountryStats = async (startDate: string, endDate: string): Promi
   }));
   
   return countryStats.sort((a, b) => b.views - a.views);
+};
+
+// Get browser stats for a specific domain
+export const getBrowserStatsForDomain = async (domain: string, startDate: string, endDate: string): Promise<BrowserStats[]> => {
+  const { data, error } = await supabase
+    .from('metrics_page_views')
+    .select('browser_normalized, ip')
+    .eq('domain_normalized', domain)
+    .gte('timestamp', `${startDate}T00:00:00Z`)
+    .lte('timestamp', `${endDate}T23:59:59Z`)
+    .not('browser_normalized', 'is', null);
+  
+  if (error || !data || data.length === 0) return [];
+  
+  const browsers: Record<string, { views: number, ips: Set<string> }> = {};
+  
+  data.forEach(item => {
+    const browser = item.browser_normalized;
+    
+    if (!browsers[browser]) {
+      browsers[browser] = { views: 0, ips: new Set() };
+    }
+    
+    browsers[browser].views++;
+    browsers[browser].ips.add(item.ip);
+  });
+  
+  const totalViews = data.length;
+  
+  const browserStats = Object.entries(browsers).map(([browser, stats]) => ({
+    browser,
+    views: stats.views,
+    visitors: stats.ips.size,
+    percentage: Math.round((stats.views / totalViews) * 1000) / 10,
+  }));
+  
+  return browserStats.sort((a, b) => b.views - a.views);
+};
+
+// Get OS stats for a specific domain
+export const getOSStatsForDomain = async (domain: string, startDate: string, endDate: string): Promise<OSStats[]> => {
+  const { data, error } = await supabase
+    .from('metrics_page_views')
+    .select('os_normalized, ip')
+    .eq('domain_normalized', domain)
+    .gte('timestamp', `${startDate}T00:00:00Z`)
+    .lte('timestamp', `${endDate}T23:59:59Z`)
+    .not('os_normalized', 'is', null);
+  
+  if (error || !data || data.length === 0) return [];
+  
+  const operatingSystems: Record<string, { views: number, ips: Set<string> }> = {};
+  
+  data.forEach(item => {
+    const os = item.os_normalized;
+    
+    if (!operatingSystems[os]) {
+      operatingSystems[os] = { views: 0, ips: new Set() };
+    }
+    
+    operatingSystems[os].views++;
+    operatingSystems[os].ips.add(item.ip);
+  });
+  
+  const totalViews = data.length;
+  
+  const osStats = Object.entries(operatingSystems).map(([os, stats]) => ({
+    os,
+    views: stats.views,
+    visitors: stats.ips.size,
+    percentage: Math.round((stats.views / totalViews) * 1000) / 10,
+  }));
+  
+  return osStats.sort((a, b) => b.views - a.views);
+};
+
+// Get device stats for a specific domain
+export const getDeviceStatsForDomain = async (domain: string, startDate: string, endDate: string): Promise<DeviceStats[]> => {
+  const { data, error } = await supabase
+    .from('metrics_page_views')
+    .select('device_normalized, ip')
+    .eq('domain_normalized', domain)
+    .gte('timestamp', `${startDate}T00:00:00Z`)
+    .lte('timestamp', `${endDate}T23:59:59Z`)
+    .not('device_normalized', 'is', null);
+  
+  if (error || !data || data.length === 0) return [];
+  
+  const devices: Record<string, { views: number, ips: Set<string> }> = {};
+  
+  data.forEach(item => {
+    const device = item.device_normalized;
+    
+    if (!devices[device]) {
+      devices[device] = { views: 0, ips: new Set() };
+    }
+    
+    devices[device].views++;
+    devices[device].ips.add(item.ip);
+  });
+  
+  const totalViews = data.length;
+  
+  const deviceStats = Object.entries(devices).map(([device, stats]) => ({
+    device,
+    views: stats.views,
+    visitors: stats.ips.size,
+    percentage: Math.round((stats.views / totalViews) * 1000) / 10,
+  }));
+  
+  return deviceStats.sort((a, b) => b.views - a.views);
+};
+
+// Get country stats for a specific domain
+export const getCountryStatsForDomain = async (domain: string, startDate: string, endDate: string): Promise<CountryStats[]> => {
+  const { data, error } = await supabase
+    .from('metrics_page_views')
+    .select('country, ip')
+    .eq('domain_normalized', domain)
+    .gte('timestamp', `${startDate}T00:00:00Z`)
+    .lte('timestamp', `${endDate}T23:59:59Z`)
+    .not('country', 'is', null);
+  
+  if (error || !data || data.length === 0) return [];
+  
+  const countries: Record<string, { views: number, ips: Set<string> }> = {};
+  
+  data.forEach(item => {
+    if (!countries[item.country]) {
+      countries[item.country] = { views: 0, ips: new Set() };
+    }
+    
+    countries[item.country].views++;
+    countries[item.country].ips.add(item.ip);
+  });
+  
+  const totalViews = data.length;
+  
+  const countryStats = Object.entries(countries).map(([country, stats]) => ({
+    country,
+    views: stats.views,
+    visitors: stats.ips.size,
+    percentage: Math.round((stats.views / totalViews) * 1000) / 10,
+  }));
+  
+  return countryStats.sort((a, b) => b.views - a.views);
 }; 
