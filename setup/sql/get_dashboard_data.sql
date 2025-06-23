@@ -149,7 +149,6 @@ BEGIN
     WHERE 
       pv.timestamp >= start_date
       AND pv.timestamp <= end_date
-      AND pv.browser_normalized IS NOT NULL
       AND (domains IS NULL OR pv.domain_normalized = ANY(domains))
       AND NOT EXISTS (
         SELECT 1 FROM domains_under_contract duc 
@@ -158,13 +157,13 @@ BEGIN
   ),
   browser_counts AS (
     SELECT
-      browser_normalized AS browser,
+      COALESCE(browser_normalized, 'Other') AS browser,
       COUNT(*) AS views,
       COUNT(DISTINCT ip) AS visitors
     FROM
       filtered_views
     GROUP BY
-      browser_normalized
+      COALESCE(browser_normalized, 'Other')
     HAVING
       COUNT(*) >= min_views
   ),
@@ -200,7 +199,6 @@ BEGIN
     WHERE 
       pv.timestamp >= start_date
       AND pv.timestamp <= end_date
-      AND pv.os_normalized IS NOT NULL
       AND (domains IS NULL OR pv.domain_normalized = ANY(domains))
       AND NOT EXISTS (
         SELECT 1 FROM domains_under_contract duc 
@@ -209,13 +207,13 @@ BEGIN
   ),
   os_counts AS (
     SELECT
-      os_normalized AS os,
+      COALESCE(os_normalized, 'Other') AS os,
       COUNT(*) AS views,
       COUNT(DISTINCT ip) AS visitors
     FROM
       filtered_views
     GROUP BY
-      os_normalized
+      COALESCE(os_normalized, 'Other')
     HAVING
       COUNT(*) >= min_views
   ),
@@ -251,7 +249,6 @@ BEGIN
     WHERE 
       pv.timestamp >= start_date
       AND pv.timestamp <= end_date
-      AND pv.device_normalized IS NOT NULL
       AND (domains IS NULL OR pv.domain_normalized = ANY(domains))
       AND NOT EXISTS (
         SELECT 1 FROM domains_under_contract duc 
@@ -260,13 +257,13 @@ BEGIN
   ),
   device_counts AS (
     SELECT
-      device_normalized AS device,
+      COALESCE(device_normalized, 'Other') AS device,
       COUNT(*) AS views,
       COUNT(DISTINCT ip) AS visitors
     FROM
       filtered_views
     GROUP BY
-      device_normalized
+      COALESCE(device_normalized, 'Other')
     HAVING
       COUNT(*) >= min_views
   ),
