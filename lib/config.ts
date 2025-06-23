@@ -26,6 +26,10 @@ export const APP_CONFIG = {
       INITIAL_ITEMS: 12,
       ITEMS_PER_LOAD: 12,
     },
+    DETAIL_HITS: {
+      INITIAL_ITEMS: 20,
+      ITEMS_PER_LOAD: 100,
+    },
   },
   
   // API settings
