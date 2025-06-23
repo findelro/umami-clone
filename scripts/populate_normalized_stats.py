@@ -243,9 +243,10 @@ class UserAgentNormalizer:
                     browser = 'Samsung'
                 elif 'yandex' in ua_lower or 'yabrowser' in ua_lower:
                     browser = 'Yandex'
-                # If we have a valid Mozilla user agent but no browser identified, it's likely a real browser
+                # If we have a valid Mozilla user agent but no browser identified, return None
+                # This keeps it consistent with other unrecognized browsers
                 elif ua_lower.startswith('mozilla/5.0') and ('windows' in ua_lower or 'linux' in ua_lower or 'macintosh' in ua_lower or 'android' in ua_lower):
-                    browser = 'Other'  # Valid browser but unrecognized type
+                    browser = None  # Valid browser but unrecognized type - keep as NULL
             
             # Normalize OS
             os = None  # Default to NULL for unrecognized OS
