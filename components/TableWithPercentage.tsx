@@ -155,10 +155,16 @@ export default function TableWithPercentage<T extends TableData>({
     return title === 'Referrers' && nameKey === 'referrer';
   };
 
+  // Function to check if item is a domain
+  const isDomain = () => {
+    return title === 'Domains' && nameKey === 'domain';
+  };
+
   // Function to render the name cell based on item type
   const renderNameCell = (item: T, index: number, keyValue: string, displayName: string) => {
     // Determine if item should be clickable
     const isClickableReferrer = isReferrer() && isHomePage && displayName !== namePlaceholder;
+    const isClickableDomain = isDomain() && isHomePage && displayName !== namePlaceholder;
     
     if (isClickableReferrer) {
       const href = `/referrer?domain=${encodeURIComponent(displayName)}${startDate ? `&startDate=${startDate}` : ''}${endDate ? `&endDate=${endDate}` : ''}`;
@@ -184,6 +190,16 @@ export default function TableWithPercentage<T extends TableData>({
               />
             </div>
           ) : null}
+          <span>{displayName}</span>
+        </Link>
+      );
+    }
+
+    if (isClickableDomain) {
+      const href = `/domain?domain=${encodeURIComponent(displayName)}${startDate ? `&startDate=${startDate}` : ''}${endDate ? `&endDate=${endDate}` : ''}`;
+      
+      return (
+        <Link href={href} className="flex items-center hover:text-blue-600">
           <span>{displayName}</span>
         </Link>
       );

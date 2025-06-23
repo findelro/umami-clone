@@ -1,6 +1,6 @@
 import { format, subDays } from 'date-fns';
 import { supabase } from './supabase';
-import { DomainStats, ReferrerStats, BrowserStats, OSStats, DeviceStats, CountryStats } from './types';
+import { DomainStats, ReferrerStats, BrowserStats, OSStats, DeviceStats, CountryStats, DomainHit } from './types';
 
 // Helper function to get date range
 export const getDateRange = (days: number = 7) => {
@@ -101,6 +101,26 @@ export const getReferrerStats = async (startDate: string, endDate: string): Prom
   }));
 
   return results.sort((a, b) => b.views - a.views);
+};
+
+// Get domain hits history
+export const getDomainHits = async (domain: string, startDate: string, endDate: string): Promise<DomainHit[]> => {
+  const { data, error } = await supabase
+    .from('metrics_page_views')
+    .select('path, referrer_normalized, ip, timestamp')
+    .eq('domain_normalized', domain)
+    .gte('timestamp', `${startDate}T00:00:00Z`)
+    .lte('timestamp', `${endDate}T23:59:59Z`)
+    .order('timestamp', { ascending: false });
+  
+  if (error || !data || data.length === 0) return [];
+  
+  return data.map(item => ({
+    page: item.path || '/',
+    referrer: item.referrer_normalized || '',
+    ip: item.ip,
+    timestamp: item.timestamp
+  }));
 };
 
 // Get browser stats

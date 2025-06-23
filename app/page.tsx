@@ -165,7 +165,6 @@ export default function Home() {
                       data={referrersData} 
                       title="Referrers"
                       nameKey="referrer"
-                      namePlaceholder="Direct / None"
                       startDate={dateRange.startDate}
                       endDate={dateRange.endDate}
                       initialItemsToShow={APP_CONFIG.TABLE_PAGINATION.REFERRERS.INITIAL_ITEMS}

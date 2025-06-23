@@ -62,4 +62,11 @@ export interface CountryStats {
   views: number;
   visitors: number;
   percentage: number;
+}
+
+export interface DomainHit {
+  page: string;
+  referrer: string;
+  ip: string;
+  timestamp: string;
 } 
