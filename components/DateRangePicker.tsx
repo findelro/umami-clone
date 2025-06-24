@@ -4,6 +4,8 @@ interface DateRangePickerProps {
   startDate: string;
   endDate: string;
   onRangeChange: (startDate: string, endDate: string) => void;
+  includeBots: boolean;
+  onIncludeBotsChange: (include: boolean) => void;
   className?: string;
 }
 
@@ -11,6 +13,8 @@ export default function DateRangePicker({
   startDate,
   endDate,
   onRangeChange,
+  includeBots,
+  onIncludeBotsChange,
   className = '',
 }: DateRangePickerProps) {
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -19,6 +23,10 @@ export default function DateRangePicker({
 
   const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onRangeChange(startDate, e.target.value);
+  };
+
+  const handleBotsCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onIncludeBotsChange(e.target.checked);
   };
 
   // Quick date range presets
@@ -54,18 +62,23 @@ export default function DateRangePicker({
     );
   };
 
-  const selectThisMonth = () => {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), 1);
-    
-    onRangeChange(
-      start.toISOString().split('T')[0],
-      now.toISOString().split('T')[0]
-    );
-  };
-
   return (
     <div className={`flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 items-center ${className}`}>
+      <div className="flex items-center space-x-4">
+        <div className="flex items-center">
+          <input
+            id="include-bots"
+            name="include-bots"
+            type="checkbox"
+            checked={includeBots}
+            onChange={handleBotsCheckboxChange}
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+          />
+          <label htmlFor="include-bots" className="ml-2 block text-sm text-gray-900">
+            Include Bots
+          </label>
+        </div>
+      </div>
       <div className="flex items-center space-x-2">
         <label htmlFor="start-date" className="text-sm font-medium text-gray-700">
           From:
@@ -111,13 +124,6 @@ export default function DateRangePicker({
           className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
           Last 30 days
-        </button>
-        <button
-          type="button"
-          onClick={selectThisMonth}
-          className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          This month
         </button>
       </div>
     </div>

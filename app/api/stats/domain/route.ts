@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
     const domain = searchParams.get('domain');
     const type = searchParams.get('type');
+    const includeBots = searchParams.get('includeBots') === 'true';
     
     if (!startDate || !endDate || !domain) {
       return NextResponse.json(
@@ -25,11 +26,11 @@ export async function GET(request: NextRequest) {
     // If type is 'all', return all domain-specific stats
     if (type === 'all') {
       const [hits, browsers, os, devices, countries] = await Promise.all([
-        getDomainHits(domain, startDate, endDate),
-        getBrowserStatsForDomain(domain, startDate, endDate),
-        getOSStatsForDomain(domain, startDate, endDate),
-        getDeviceStatsForDomain(domain, startDate, endDate),
-        getCountryStatsForDomain(domain, startDate, endDate)
+        getDomainHits(domain, startDate, endDate, includeBots),
+        getBrowserStatsForDomain(domain, startDate, endDate, includeBots),
+        getOSStatsForDomain(domain, startDate, endDate, includeBots),
+        getDeviceStatsForDomain(domain, startDate, endDate, includeBots),
+        getCountryStatsForDomain(domain, startDate, endDate, includeBots)
       ]);
       
       return NextResponse.json({ 
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Default: return just the hits data (backward compatibility)
-    const data = await getDomainHits(domain, startDate, endDate);
+    const data = await getDomainHits(domain, startDate, endDate, includeBots);
     
     return NextResponse.json({ data });
   } catch (error) {

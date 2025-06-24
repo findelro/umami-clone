@@ -5,7 +5,8 @@ CREATE OR REPLACE FUNCTION public.get_dashboard_data(
   exclude_self_referrals boolean DEFAULT true,
   group_referrers_by_domain boolean DEFAULT true,
   min_views integer DEFAULT 1,
-  max_results_per_section integer DEFAULT 50
+  max_results_per_section integer DEFAULT 50,
+  include_bots boolean DEFAULT true
 )
 RETURNS JSON
 LANGUAGE plpgsql
@@ -30,6 +31,7 @@ BEGIN
       pv.timestamp >= start_date
       AND pv.timestamp <= end_date
       AND (domains IS NULL OR pv.domain_normalized = ANY(domains))
+      AND (include_bots OR pv.browser_normalized != 'Bot')
       AND NOT EXISTS (
         SELECT 1 FROM domains_under_contract duc 
         WHERE duc.domain = pv.domain_normalized
@@ -81,6 +83,7 @@ BEGIN
       AND pv.timestamp <= end_date
       AND pv.referrer_normalized IS NOT NULL
       AND (domains IS NULL OR pv.domain_normalized = ANY(domains))
+      AND (include_bots OR pv.browser_normalized != 'Bot')
       AND NOT EXISTS (
         SELECT 1 FROM domains_under_contract duc 
         WHERE duc.domain = pv.domain_normalized
@@ -150,6 +153,7 @@ BEGIN
       pv.timestamp >= start_date
       AND pv.timestamp <= end_date
       AND (domains IS NULL OR pv.domain_normalized = ANY(domains))
+      AND (include_bots OR pv.browser_normalized != 'Bot')
       AND NOT EXISTS (
         SELECT 1 FROM domains_under_contract duc 
         WHERE duc.domain = pv.domain_normalized
@@ -200,6 +204,7 @@ BEGIN
       pv.timestamp >= start_date
       AND pv.timestamp <= end_date
       AND (domains IS NULL OR pv.domain_normalized = ANY(domains))
+      AND (include_bots OR pv.browser_normalized != 'Bot')
       AND NOT EXISTS (
         SELECT 1 FROM domains_under_contract duc 
         WHERE duc.domain = pv.domain_normalized
@@ -250,6 +255,7 @@ BEGIN
       pv.timestamp >= start_date
       AND pv.timestamp <= end_date
       AND (domains IS NULL OR pv.domain_normalized = ANY(domains))
+      AND (include_bots OR pv.browser_normalized != 'Bot')
       AND NOT EXISTS (
         SELECT 1 FROM domains_under_contract duc 
         WHERE duc.domain = pv.domain_normalized
@@ -301,6 +307,7 @@ BEGIN
       AND pv.timestamp <= end_date
       AND pv.country IS NOT NULL
       AND (domains IS NULL OR pv.domain_normalized = ANY(domains))
+      AND (include_bots OR pv.browser_normalized != 'Bot')
       AND NOT EXISTS (
         SELECT 1 FROM domains_under_contract duc 
         WHERE duc.domain = pv.domain_normalized
@@ -361,7 +368,8 @@ GRANT EXECUTE ON FUNCTION public.get_dashboard_data(
   boolean,
   boolean,
   integer,
-  integer
+  integer,
+  boolean
 ) TO anon;
 
 -- Grant read-only access to the metrics_page_views table

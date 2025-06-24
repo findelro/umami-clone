@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     const maxResults = searchParams.get('maxResults');
+    const includeBots = searchParams.get('includeBots') === 'true';
     
     if (!startDate || !endDate) {
       return NextResponse.json(
@@ -73,7 +74,8 @@ export async function GET(request: NextRequest) {
             excludeSelfReferrals: true,
             groupReferrersByDomain: true,
             minViews: 1,
-            maxResultsPerSection: maxResults ? parseInt(maxResults) : 200
+            maxResultsPerSection: maxResults ? parseInt(maxResults) : 200,
+            includeBots: includeBots
           }
         );
         

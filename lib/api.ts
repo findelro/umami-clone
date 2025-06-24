@@ -7,6 +7,7 @@ export interface DashboardOptions {
   groupReferrersByDomain?: boolean;
   minViews?: number;
   maxResultsPerSection?: number;
+  includeBots?: boolean;
 }
 
 // Format the date for the Supabase API call
@@ -27,7 +28,8 @@ export const getDashboardData = async (
     exclude_self_referrals: options.excludeSelfReferrals ?? true,
     group_referrers_by_domain: options.groupReferrersByDomain ?? true,
     min_views: options.minViews ?? 1,
-    max_results_per_section: options.maxResultsPerSection ?? 50
+    max_results_per_section: options.maxResultsPerSection ?? 50,
+    include_bots: options.includeBots ?? true
   });
   
   if (error) {

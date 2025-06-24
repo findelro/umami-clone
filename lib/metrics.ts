@@ -104,14 +104,19 @@ export const getReferrerStats = async (startDate: string, endDate: string): Prom
 };
 
 // Get domain hits history
-export const getDomainHits = async (domain: string, startDate: string, endDate: string): Promise<DomainHit[]> => {
-  const { data, error } = await supabase
+export const getDomainHits = async (domain: string, startDate: string, endDate: string, includeBots: boolean = true): Promise<DomainHit[]> => {
+  let query = supabase
     .from('metrics_page_views')
     .select('path, referrer_normalized, ip, timestamp')
     .eq('domain_normalized', domain)
     .gte('timestamp', `${startDate}T00:00:00Z`)
-    .lte('timestamp', `${endDate}T23:59:59Z`)
-    .order('timestamp', { ascending: false });
+    .lte('timestamp', `${endDate}T23:59:59Z`);
+
+  if (!includeBots) {
+    query = query.neq('browser_normalized', 'Bot');
+  }
+
+  const { data, error } = await query.order('timestamp', { ascending: false });
   
   if (error || !data || data.length === 0) return [];
   
@@ -266,21 +271,29 @@ export const getCountryStats = async (startDate: string, endDate: string): Promi
 };
 
 // Get browser stats for a specific domain
-export const getBrowserStatsForDomain = async (domain: string, startDate: string, endDate: string): Promise<BrowserStats[]> => {
-  const { data, error } = await supabase
+export const getBrowserStatsForDomain = async (domain: string, startDate: string, endDate: string, includeBots: boolean = true): Promise<BrowserStats[]> => {
+  const query = supabase
     .from('metrics_page_views')
-    .select('browser_normalized, ip')
+    .select('browser_normalized, os_normalized, device_normalized, ip')
     .eq('domain_normalized', domain)
     .gte('timestamp', `${startDate}T00:00:00Z`)
-    .lte('timestamp', `${endDate}T23:59:59Z`)
-    .not('browser_normalized', 'is', null);
+    .lte('timestamp', `${endDate}T23:59:59Z`);
+
+  const { data: rawData, error } = await query;
   
-  if (error || !data || data.length === 0) return [];
+  if (error || !rawData || rawData.length === 0) return [];
   
+  // Filter bots in code to ensure consistency
+  const filteredData = includeBots 
+    ? rawData 
+    : rawData.filter(item => item.browser_normalized !== 'Bot');
+  
+  if (filteredData.length === 0) return [];
+
   const browsers: Record<string, { views: number, ips: Set<string> }> = {};
   
-  data.forEach(item => {
-    const browser = item.browser_normalized;
+  filteredData.forEach(item => {
+    const browser = item.browser_normalized === 'Bot' ? 'Bot' : (item.browser_normalized || 'Unknown');
     
     if (!browsers[browser]) {
       browsers[browser] = { views: 0, ips: new Set() };
@@ -290,34 +303,41 @@ export const getBrowserStatsForDomain = async (domain: string, startDate: string
     browsers[browser].ips.add(item.ip);
   });
   
-  const totalViews = data.length;
+  const totalVisitors = new Set(filteredData.map(item => item.ip)).size;
   
   const browserStats = Object.entries(browsers).map(([browser, stats]) => ({
     browser,
     views: stats.views,
     visitors: stats.ips.size,
-    percentage: Math.round((stats.views / totalViews) * 1000) / 10,
+    percentage: totalVisitors > 0 ? Math.round((stats.ips.size / totalVisitors) * 100) : 0,
   }));
   
-  return browserStats.sort((a, b) => b.views - a.views);
+  return browserStats.sort((a, b) => b.visitors - a.visitors);
 };
 
 // Get OS stats for a specific domain
-export const getOSStatsForDomain = async (domain: string, startDate: string, endDate: string): Promise<OSStats[]> => {
-  const { data, error } = await supabase
+export const getOSStatsForDomain = async (domain: string, startDate: string, endDate: string, includeBots: boolean = true): Promise<OSStats[]> => {
+  const query = supabase
     .from('metrics_page_views')
-    .select('os_normalized, ip')
+    .select('browser_normalized, os_normalized, device_normalized, ip')
     .eq('domain_normalized', domain)
     .gte('timestamp', `${startDate}T00:00:00Z`)
-    .lte('timestamp', `${endDate}T23:59:59Z`)
-    .not('os_normalized', 'is', null);
+    .lte('timestamp', `${endDate}T23:59:59Z`);
+
+  const { data: rawData, error } = await query;
   
-  if (error || !data || data.length === 0) return [];
+  if (error || !rawData || rawData.length === 0) return [];
+  
+  const filteredData = includeBots 
+    ? rawData 
+    : rawData.filter(item => item.browser_normalized !== 'Bot');
+
+  if (filteredData.length === 0) return [];
   
   const operatingSystems: Record<string, { views: number, ips: Set<string> }> = {};
   
-  data.forEach(item => {
-    const os = item.os_normalized;
+  filteredData.forEach(item => {
+    const os = item.browser_normalized === 'Bot' ? 'Bot' : (item.os_normalized || 'Unknown');
     
     if (!operatingSystems[os]) {
       operatingSystems[os] = { views: 0, ips: new Set() };
@@ -327,34 +347,41 @@ export const getOSStatsForDomain = async (domain: string, startDate: string, end
     operatingSystems[os].ips.add(item.ip);
   });
   
-  const totalViews = data.length;
+  const totalVisitors = new Set(filteredData.map(item => item.ip)).size;
   
   const osStats = Object.entries(operatingSystems).map(([os, stats]) => ({
     os,
     views: stats.views,
     visitors: stats.ips.size,
-    percentage: Math.round((stats.views / totalViews) * 1000) / 10,
+    percentage: totalVisitors > 0 ? Math.round((stats.ips.size / totalVisitors) * 100) : 0,
   }));
   
-  return osStats.sort((a, b) => b.views - a.views);
+  return osStats.sort((a, b) => b.visitors - a.visitors);
 };
 
 // Get device stats for a specific domain
-export const getDeviceStatsForDomain = async (domain: string, startDate: string, endDate: string): Promise<DeviceStats[]> => {
-  const { data, error } = await supabase
+export const getDeviceStatsForDomain = async (domain: string, startDate: string, endDate: string, includeBots: boolean = true): Promise<DeviceStats[]> => {
+  const query = supabase
     .from('metrics_page_views')
-    .select('device_normalized, ip')
+    .select('browser_normalized, os_normalized, device_normalized, ip')
     .eq('domain_normalized', domain)
     .gte('timestamp', `${startDate}T00:00:00Z`)
-    .lte('timestamp', `${endDate}T23:59:59Z`)
-    .not('device_normalized', 'is', null);
+    .lte('timestamp', `${endDate}T23:59:59Z`);
+
+  const { data: rawData, error } = await query;
   
-  if (error || !data || data.length === 0) return [];
+  if (error || !rawData || rawData.length === 0) return [];
+  
+  const filteredData = includeBots 
+    ? rawData 
+    : rawData.filter(item => item.browser_normalized !== 'Bot');
+
+  if (filteredData.length === 0) return [];
   
   const devices: Record<string, { views: number, ips: Set<string> }> = {};
   
-  data.forEach(item => {
-    const device = item.device_normalized;
+  filteredData.forEach(item => {
+    const device = item.browser_normalized === 'Bot' ? 'Bot' : (item.device_normalized || 'Unknown');
     
     if (!devices[device]) {
       devices[device] = { views: 0, ips: new Set() };
@@ -364,49 +391,58 @@ export const getDeviceStatsForDomain = async (domain: string, startDate: string,
     devices[device].ips.add(item.ip);
   });
   
-  const totalViews = data.length;
+  const totalVisitors = new Set(filteredData.map(item => item.ip)).size;
   
   const deviceStats = Object.entries(devices).map(([device, stats]) => ({
     device,
     views: stats.views,
     visitors: stats.ips.size,
-    percentage: Math.round((stats.views / totalViews) * 1000) / 10,
+    percentage: totalVisitors > 0 ? Math.round((stats.ips.size / totalVisitors) * 100) : 0,
   }));
   
-  return deviceStats.sort((a, b) => b.views - a.views);
+  return deviceStats.sort((a, b) => b.visitors - a.visitors);
 };
 
 // Get country stats for a specific domain
-export const getCountryStatsForDomain = async (domain: string, startDate: string, endDate: string): Promise<CountryStats[]> => {
-  const { data, error } = await supabase
+export const getCountryStatsForDomain = async (domain: string, startDate: string, endDate: string, includeBots: boolean = true): Promise<CountryStats[]> => {
+  const query = supabase
     .from('metrics_page_views')
-    .select('country, ip')
+    .select('browser_normalized, country, ip')
     .eq('domain_normalized', domain)
     .gte('timestamp', `${startDate}T00:00:00Z`)
-    .lte('timestamp', `${endDate}T23:59:59Z`)
-    .not('country', 'is', null);
+    .lte('timestamp', `${endDate}T23:59:59Z`);
+
+  const { data: rawData, error } = await query;
   
-  if (error || !data || data.length === 0) return [];
+  if (error || !rawData || rawData.length === 0) return [];
   
+  const filteredData = includeBots 
+    ? rawData 
+    : rawData.filter(item => item.browser_normalized !== 'Bot');
+
+  if (filteredData.length === 0) return [];
+
   const countries: Record<string, { views: number, ips: Set<string> }> = {};
   
-  data.forEach(item => {
-    if (!countries[item.country]) {
-      countries[item.country] = { views: 0, ips: new Set() };
+  filteredData.forEach(item => {
+    const country = item.country || 'Unknown';
+
+    if (!countries[country]) {
+      countries[country] = { views: 0, ips: new Set() };
     }
     
-    countries[item.country].views++;
-    countries[item.country].ips.add(item.ip);
+    countries[country].views++;
+    countries[country].ips.add(item.ip);
   });
   
-  const totalViews = data.length;
+  const totalVisitors = new Set(filteredData.map(item => item.ip)).size;
   
   const countryStats = Object.entries(countries).map(([country, stats]) => ({
     country,
     views: stats.views,
     visitors: stats.ips.size,
-    percentage: Math.round((stats.views / totalViews) * 1000) / 10,
+    percentage: totalVisitors > 0 ? Math.round((stats.ips.size / totalVisitors) * 100) : 0,
   }));
-  
-  return countryStats.sort((a, b) => b.views - a.views);
+
+  return countryStats.sort((a, b) => b.visitors - a.visitors);
 }; 

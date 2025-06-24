@@ -38,6 +38,9 @@ function DomainContent() {
     endDate: searchParams.get('endDate') || format(new Date(), 'yyyy-MM-dd')
   });
 
+  // Include bots state
+  const [includeBots, setIncludeBots] = useState(true);
+
   // Data state
   const [hits, setHits] = useState<DomainHit[]>([]);
   const [browsersData, setBrowsersData] = useState<BrowserStats[]>([]);
@@ -58,6 +61,10 @@ function DomainContent() {
     setDateRange({ startDate, endDate });
   };
 
+  const handleIncludeBotsChange = (include: boolean) => {
+    setIncludeBots(include);
+  };
+
   // Fetch domain stats
   useEffect(() => {
     const fetchDomainStats = async () => {
@@ -72,7 +79,7 @@ function DomainContent() {
       
       try {
         const response = await fetch(
-          `/api/stats/domain?domain=${encodeURIComponent(domain)}&startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&type=all`
+          `/api/stats/domain?domain=${encodeURIComponent(domain)}&startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&type=all&includeBots=${includeBots}`
         );
         
         if (!response.ok) {
@@ -97,7 +104,7 @@ function DomainContent() {
     };
 
     fetchDomainStats();
-  }, [domain, dateRange.startDate, dateRange.endDate]);
+  }, [domain, dateRange.startDate, dateRange.endDate, includeBots]);
 
   // Reset showAllHits and hitsToShow when hits change
   useEffect(() => {
@@ -120,6 +127,8 @@ function DomainContent() {
                 startDate={dateRange.startDate}
                 endDate={dateRange.endDate}
                 onRangeChange={handleDateRangeChange}
+                includeBots={includeBots}
+                onIncludeBotsChange={handleIncludeBotsChange}
               />
             </div>
 

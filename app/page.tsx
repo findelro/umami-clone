@@ -34,6 +34,9 @@ export default function Home() {
     endDate: format(new Date(), 'yyyy-MM-dd')
   });
 
+  // Include bots state
+  const [includeBots, setIncludeBots] = useState(true);
+
   // Stats data state
   const [domainsData, setDomainsData] = useState<DomainStats[]>([]);
   const [referrersData, setReferrersData] = useState<ReferrerStats[]>([]);
@@ -51,6 +54,10 @@ export default function Home() {
     setDateRange({ startDate, endDate });
   };
 
+  const handleIncludeBotsChange = (include: boolean) => {
+    setIncludeBots(include);
+  };
+
   // Fetch all stats
   useEffect(() => {
     const fetchStats = async () => {
@@ -60,7 +67,7 @@ export default function Home() {
       try {
         // Fetch all stats from the API
         const response = await fetch(
-          `/api/stats?type=all&startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&maxResults=${APP_CONFIG.API.MAX_RESULTS_PER_SECTION}`
+          `/api/stats?type=all&startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&maxResults=${APP_CONFIG.API.MAX_RESULTS_PER_SECTION}&includeBots=${includeBots}`
         );
         
         if (!response.ok) {
@@ -115,7 +122,7 @@ export default function Home() {
     };
 
     fetchStats();
-  }, [dateRange.startDate, dateRange.endDate]);
+  }, [dateRange.startDate, dateRange.endDate, includeBots]);
 
   return (
     <>
@@ -130,6 +137,8 @@ export default function Home() {
                 startDate={dateRange.startDate}
                 endDate={dateRange.endDate}
                 onRangeChange={handleDateRangeChange}
+                includeBots={includeBots}
+                onIncludeBotsChange={handleIncludeBotsChange}
               />
             </div>
 

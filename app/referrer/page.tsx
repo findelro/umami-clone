@@ -18,6 +18,9 @@ function ReferrerContent() {
     endDate: searchParams.get('endDate') || format(new Date(), 'yyyy-MM-dd')
   });
 
+  // Include bots state
+  const [includeBots, setIncludeBots] = useState(true);
+
   // UI state
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +29,10 @@ function ReferrerContent() {
   // Handle date range change
   const handleDateRangeChange = (startDate: string, endDate: string) => {
     setDateRange({ startDate, endDate });
+  };
+
+  const handleIncludeBotsChange = (include: boolean) => {
+    setIncludeBots(include);
   };
 
   // Fetch referrer target data
@@ -42,7 +49,7 @@ function ReferrerContent() {
       
       try {
         const response = await fetch(
-          `/api/stats/referrer?referrerDomain=${encodeURIComponent(referrerDomain)}&startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
+          `/api/stats/referrer?referrerDomain=${encodeURIComponent(referrerDomain)}&startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&includeBots=${includeBots}`
         );
         
         if (!response.ok) {
@@ -61,7 +68,7 @@ function ReferrerContent() {
     };
 
     fetchReferrerData();
-  }, [referrerDomain, dateRange.startDate, dateRange.endDate]);
+  }, [referrerDomain, dateRange.startDate, dateRange.endDate, includeBots]);
 
   return (
     <>
@@ -75,6 +82,8 @@ function ReferrerContent() {
                 startDate={dateRange.startDate}
                 endDate={dateRange.endDate}
                 onRangeChange={handleDateRangeChange}
+                includeBots={includeBots}
+                onIncludeBotsChange={handleIncludeBotsChange}
               />
             </div>
 
