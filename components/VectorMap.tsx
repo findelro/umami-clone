@@ -1,6 +1,14 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
 import { CountryStats } from '@/lib/types';
+import { getCountryName } from '@/lib/countries';
+
+const formatVisitors = (visitors: number) => {
+  if (visitors >= 1000) {
+    return `${(visitors / 1000).toFixed(2)}k`;
+  }
+  return visitors.toLocaleString();
+};
 
 // Dynamically import the VectorMap component to avoid SSR issues
 const VectorMapNoSSR = dynamic(
@@ -39,18 +47,8 @@ const VectorMapNoSSR = dynamic(
   }
 );
 
-// ISO 3166-1 alpha-2 country codes to alpha-3 mapping for jVectorMap
-const countryCodeMapping: Record<string, string> = {
-  'US': 'USA', 'GB': 'GBR', 'CA': 'CAN', 'CN': 'CHN', 'JP': 'JPN', 'AU': 'AUS',
-  'DE': 'DEU', 'FR': 'FRA', 'IT': 'ITA', 'ES': 'ESP', 'RU': 'RUS', 'BR': 'BRA',
-  'IN': 'IND', 'KR': 'KOR', 'MX': 'MEX', 'ZA': 'ZAF', 'NL': 'NLD', 'SE': 'SWE',
-  'CH': 'CHE', 'NO': 'NOR', 'DK': 'DNK', 'PL': 'POL', 'BE': 'BEL', 'AT': 'AUT',
-  'FI': 'FIN', 'NZ': 'NZL', 'SG': 'SGP', 'IE': 'IRL', 'AR': 'ARG', 'TH': 'THA',
-  'ID': 'IDN', 'MY': 'MYS', 'PH': 'PHL', 'VN': 'VNM', 'TR': 'TUR', 'UA': 'UKR',
-  'PT': 'PRT', 'GR': 'GRC', 'HU': 'HUN', 'CZ': 'CZE', 'RO': 'ROU', 'IL': 'ISR',
-  'AE': 'ARE', 'SA': 'SAU', 'EG': 'EGY', 'MA': 'MAR', 'KE': 'KEN', 'NG': 'NGA',
-  'CL': 'CHL', 'CO': 'COL', 'PE': 'PER', 'VE': 'VEN', 'BD': 'BGD', 'PK': 'PAK'
-};
+// No need for country code mapping, as jVectorMap uses ISO 3166-1 alpha-2 codes by default
+// const countryCodeMapping: Record<string, string> = { ... };
 
 interface VectorMapProps {
   data: CountryStats[];
@@ -66,12 +64,20 @@ export default function InteractiveVectorMap({ data, className = '' }: VectorMap
   // Convert country data to format needed by jVectorMap
   const countryData: Record<string, number> = {};
   const countryNames: Record<string, string> = {};
+  const countryPercentages: Record<string, number> = {};
+
+  const totalVisitors = data.reduce((sum, country) => sum + country.visitors, 0);
 
   data.forEach(country => {
-    // Convert 2-letter codes to 3-letter codes if available
-    const countryCode = countryCodeMapping[country.country] || country.country;
+    // jVectorMap uses 2-letter ISO codes, which are already in the data
+    const countryCode = country.country;
     countryData[countryCode] = country.visitors;
-    countryNames[countryCode] = country.country;
+    countryNames[countryCode] = getCountryName(country.country);
+    if (totalVisitors > 0) {
+      countryPercentages[countryCode] = (country.visitors / totalVisitors) * 100;
+    } else {
+      countryPercentages[countryCode] = 0;
+    }
   });
 
   return (
@@ -109,18 +115,18 @@ export default function InteractiveVectorMap({ data, className = '' }: VectorMap
           ]
         }}
         onRegionTipShow={(event: Event, label: LabelObject, code: string) => {
-          const countryName = countryNames[code] || code;
+          const countryName = getCountryName(code);
           const visitors = countryData[code] || 0;
-          const percent = data.length > 0 
-            ? Math.round((visitors / data.reduce((sum, c) => sum + c.visitors, 0)) * 1000) / 10 
-            : 0;
-          
-          label.html(`
-            <div class="bg-white py-1 px-2 shadow-sm rounded border border-gray-100">
-              <div class="font-medium">${countryName}</div>
-              <div class="text-xs text-gray-500">${visitors} visitor${visitors !== 1 ? 's' : ''} (${percent}%)</div>
-            </div>
-          `);
+
+          if (visitors > 0) {
+            const formattedVisitors = formatVisitors(visitors);
+            label.html(
+              `<div><strong>${countryName}:</strong> ${formattedVisitors} visitor${visitors !== 1 ? 's' : ''}</div>`
+            );
+          } else {
+            // Prevents showing a tooltip for countries with no data
+            (event.target as HTMLElement).setAttribute('data-tip-show', 'false');
+          }
         }}
       />
     </div>

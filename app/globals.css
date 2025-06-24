@@ -37,16 +37,30 @@ body {
   position: absolute;
   display: none;
   border-radius: 3px;
-  background: white;
-  font-family: inherit;
+  background: #282828;
+  color: #ffffff;
+  font-family: sans-serif, 'Verdana';
+  font-size: smaller;
+  padding: 5px 8px;
+  white-space: nowrap;
   z-index: 1000;
-  padding: 0;
-  pointer-events: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #eee;
+  border: 0;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+}
+
+.jvectormap-tip-custom {
+  padding: 5px 10px;
+  font-size: 14px;
+}
+
+.jvectormap-tip-custom strong {
+  font-weight: bold;
+  color: #333;
 }
 
 .jvectormap-zoomin, 
 .jvectormap-zoomout {
   display: none;
 }
+
+@tailwind utilities;
