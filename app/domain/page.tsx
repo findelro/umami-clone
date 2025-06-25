@@ -159,13 +159,13 @@ function DomainContent() {
                                 Page
                               </th>
                               <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
-                                Referrer
-                              </th>
-                              <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
                                 IP
                               </th>
                               <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
                                 Date
+                              </th>
+                              <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                                Referrer
                               </th>
                             </tr>
                           </thead>
@@ -175,14 +175,14 @@ function DomainContent() {
                                 <td className="px-4 py-3 text-sm font-medium text-gray-900 max-w-xs truncate" title={hit.page}>
                                   {hit.page}
                                 </td>
-                                <td className="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" title={hit.referrer || ''}>
-                                  {hit.referrer || ''}
-                                </td>
                                 <td className="px-4 py-3 text-sm text-gray-700 font-mono">
                                   {hit.ip}
                                 </td>
                                 <td className="px-4 py-3 text-sm text-gray-700">
                                   {format(new Date(hit.timestamp), 'MM/dd/yy HH:mm')}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" title={hit.referrer || ''}>
+                                  {hit.referrer || ''}
                                 </td>
                               </tr>
                             ))}
