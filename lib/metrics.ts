@@ -107,7 +107,7 @@ export const getReferrerStats = async (startDate: string, endDate: string): Prom
 export const getDomainHits = async (domain: string, startDate: string, endDate: string, includeBots: boolean = true): Promise<DomainHit[]> => {
   let query = supabase
     .from('metrics_page_views')
-    .select('path, referrer_normalized, ip, timestamp')
+    .select('path, referrer_normalized, ip, timestamp, country')
     .eq('domain_normalized', domain)
     .gte('timestamp', `${startDate}T00:00:00Z`)
     .lte('timestamp', `${endDate}T23:59:59Z`);
@@ -118,14 +118,26 @@ export const getDomainHits = async (domain: string, startDate: string, endDate: 
 
   const { data, error } = await query.order('timestamp', { ascending: false });
   
-  if (error || !data || data.length === 0) return [];
+  if (error) {
+    console.error("Error fetching domain hits:", error);
+    return [];
+  }
   
-  return data.map(item => ({
+  if (!data || data.length === 0) return [];
+  
+  console.log("Raw database results with country:", data.slice(0, 3));
+  
+  const hits = data.map(item => ({
     page: item.path || '/',
     referrer: item.referrer_normalized || '',
     ip: item.ip,
-    timestamp: item.timestamp
+    timestamp: item.timestamp,
+    country: item.country || 'unknown'
   }));
+  
+  console.log("Processed hits with country:", hits.slice(0, 3));
+  
+  return hits;
 };
 
 // Get browser stats

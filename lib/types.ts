@@ -69,4 +69,5 @@ export interface DomainHit {
   referrer: string;
   ip: string;
   timestamp: string;
+  country: string;
 } 

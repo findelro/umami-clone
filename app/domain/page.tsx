@@ -18,6 +18,26 @@ import {
 import { APP_CONFIG } from '@/lib/config';
 import PaginatedTableFooter from '@/components/PaginatedTableFooter';
 
+// Import the getCountryFlag function from TableWithPercentage
+// Helper function to get country flag emoji
+function getCountryFlag(countryCode: string): string {
+  if (!countryCode || countryCode.length !== 2) {
+    return '🏴';
+  }
+  
+  // Special case for "ZZ" or "unknown" - return white flag
+  if (countryCode.toUpperCase() === 'ZZ' || countryCode.toLowerCase() === 'unknown') {
+    return '🏳️';
+  }
+  
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0));
+  
+  return String.fromCodePoint(...codePoints);
+}
+
 // Dynamically import the VectorMap component with no SSR to prevent hydration errors
 const InteractiveVectorMap = dynamic(() => import('@/components/VectorMap'), {
   ssr: false,
@@ -90,6 +110,8 @@ function DomainContent() {
         const result = await response.json();
         const domainData = result.data;
         
+        console.log("Domain hits with country data:", domainData.hits);
+        
         setHits(domainData.hits);
         setBrowsersData(domainData.browsers);
         setOsData(domainData.os);
@@ -110,6 +132,17 @@ function DomainContent() {
   useEffect(() => {
     setShowAllHits(false);
     setHitsToShow(APP_CONFIG.TABLE_PAGINATION.DETAIL_HITS.INITIAL_ITEMS);
+  }, [hits]);
+
+  // Debug country data
+  useEffect(() => {
+    if (hits.length > 0) {
+      console.log("Hits with country data:", hits.slice(0, 5).map(hit => ({
+        ip: hit.ip,
+        country: hit.country,
+        flagPath: `/images/country/${hit.country?.toLowerCase() || 'unknown'}.png`
+      })));
+    }
   }, [hits]);
 
   return (
@@ -205,13 +238,21 @@ function DomainContent() {
 
                 {/* Individual Hits Table - Moved to the bottom */}
                 <StatsCard title="Pageviews">
-                                      {hits.length === 0 ? (
-                      <div className="text-gray-500 text-center py-8">
-                        No pageviews found in the selected date range
-                      </div>
+                  {hits.length === 0 ? (
+                    <div className="text-gray-500 text-center py-8">
+                      No pageviews found in the selected date range
+                    </div>
                   ) : (
                     <>
                       <div className="overflow-x-auto">
+                        <div className="mb-2">
+                          <button 
+                            onClick={() => console.log("Hits data:", hits)} 
+                            className="text-xs text-blue-600 hover:text-blue-800"
+                          >
+                            Debug Country Data
+                          </button>
+                        </div>
                         <table className="w-full divide-y divide-gray-100">
                           <thead className="bg-white">
                             <tr>
@@ -235,8 +276,15 @@ function DomainContent() {
                                 <td className="px-4 py-3 text-sm font-medium text-gray-900 max-w-xs truncate" title={hit.page}>
                                   {hit.page}
                                 </td>
-                                <td className="px-4 py-3 text-sm text-gray-700 font-mono">
-                                  {hit.ip}
+                                <td className="px-4 py-3 text-sm text-gray-700">
+                                  <div className="flex items-center">
+                                    {hit.country && hit.country !== 'unknown' && (
+                                      <span className="mr-2 text-lg" title={hit.country}>
+                                        {getCountryFlag(hit.country)}
+                                      </span>
+                                    )}
+                                    <span className="font-mono">{hit.ip}</span>
+                                  </div>
                                 </td>
                                 <td className="px-4 py-3 text-sm text-gray-700">
                                   {format(new Date(hit.timestamp), 'MM/dd/yy HH:mm')}
