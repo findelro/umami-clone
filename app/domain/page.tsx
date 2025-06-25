@@ -120,9 +120,12 @@ function DomainContent() {
           <div className="space-y-6">
             {/* Date picker */}
             <div className="flex justify-between items-center">
-              <h2 className="text-sm font-medium text-gray-700">
-                {hits.length} page views found
-              </h2>
+              {!isLoading && !error && (
+                <h2 className="text-sm font-medium text-gray-700">
+                  {hits.length} pageviews found
+                </h2>
+              )}
+              {isLoading && <div className="w-32"></div>} {/* Empty space placeholder when loading */}
               <DateRangePicker
                 startDate={dateRange.startDate}
                 endDate={dateRange.endDate}
@@ -143,66 +146,6 @@ function DomainContent() {
               </div>
             ) : (
               <>
-                {/* Individual Hits Table */}
-                <StatsCard>
-                  {hits.length === 0 ? (
-                    <div className="text-gray-500 text-center py-8">
-                      No page views found in the selected date range
-                    </div>
-                  ) : (
-                    <>
-                      <div className="overflow-x-auto">
-                        <table className="w-full divide-y divide-gray-100">
-                          <thead className="bg-white">
-                            <tr>
-                              <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
-                                Page
-                              </th>
-                              <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
-                                IP
-                              </th>
-                              <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
-                                Date
-                              </th>
-                              <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
-                                Referrer
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-100">
-                            {(showAllHits ? hits : hits.slice(0, hitsToShow)).map((hit, index) => (
-                              <tr key={index} className="hover:bg-gray-50">
-                                <td className="px-4 py-3 text-sm font-medium text-gray-900 max-w-xs truncate" title={hit.page}>
-                                  {hit.page}
-                                </td>
-                                <td className="px-4 py-3 text-sm text-gray-700 font-mono">
-                                  {hit.ip}
-                                </td>
-                                <td className="px-4 py-3 text-sm text-gray-700">
-                                  {format(new Date(hit.timestamp), 'MM/dd/yy HH:mm')}
-                                </td>
-                                <td className="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" title={hit.referrer || ''}>
-                                  {hit.referrer || ''}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      <PaginatedTableFooter
-                        itemsToShow={hitsToShow}
-                        totalItems={hits.length}
-                        initialItemsToShow={INITIAL_HITS_TO_SHOW}
-                        itemsPerLoad={HITS_PER_LOAD}
-                        showAll={showAllHits}
-                        onLoadMore={() => setHitsToShow(Math.min(hitsToShow + HITS_PER_LOAD, hits.length))}
-                        onShowAll={() => { setShowAllHits(true); setHitsToShow(hits.length); }}
-                        onShowLess={() => { setShowAllHits(false); setHitsToShow(INITIAL_HITS_TO_SHOW); }}
-                      />
-                    </>
-                  )}
-                </StatsCard>
-
                 {/* Stats Tables Row - Reusing the same components from homepage */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Browsers Stats */}
@@ -259,6 +202,66 @@ function DomainContent() {
                     </div>
                   </StatsCard>
                 </div>
+
+                {/* Individual Hits Table - Moved to the bottom */}
+                <StatsCard title="Pageviews">
+                                      {hits.length === 0 ? (
+                      <div className="text-gray-500 text-center py-8">
+                        No pageviews found in the selected date range
+                      </div>
+                  ) : (
+                    <>
+                      <div className="overflow-x-auto">
+                        <table className="w-full divide-y divide-gray-100">
+                          <thead className="bg-white">
+                            <tr>
+                              <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                                Page
+                              </th>
+                              <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                                IP
+                              </th>
+                              <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                                Date
+                              </th>
+                              <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                                Referrer
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-100">
+                            {(showAllHits ? hits : hits.slice(0, hitsToShow)).map((hit, index) => (
+                              <tr key={index} className="hover:bg-gray-50">
+                                <td className="px-4 py-3 text-sm font-medium text-gray-900 max-w-xs truncate" title={hit.page}>
+                                  {hit.page}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-700 font-mono">
+                                  {hit.ip}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-700">
+                                  {format(new Date(hit.timestamp), 'MM/dd/yy HH:mm')}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" title={hit.referrer || ''}>
+                                  {hit.referrer || ''}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <PaginatedTableFooter
+                        itemsToShow={hitsToShow}
+                        totalItems={hits.length}
+                        initialItemsToShow={INITIAL_HITS_TO_SHOW}
+                        itemsPerLoad={HITS_PER_LOAD}
+                        showAll={showAllHits}
+                        onLoadMore={() => setHitsToShow(Math.min(hitsToShow + HITS_PER_LOAD, hits.length))}
+                        onShowAll={() => { setShowAllHits(true); setHitsToShow(hits.length); }}
+                        onShowLess={() => { setShowAllHits(false); setHitsToShow(INITIAL_HITS_TO_SHOW); }}
+                      />
+                    </>
+                  )}
+                </StatsCard>
               </>
             )}
           </div>
