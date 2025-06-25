@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import DateRangePicker from '@/components/DateRangePicker';
 import StatsCard from '@/components/StatsCard';
 import TableWithPercentage from '@/components/TableWithPercentage';
-import Header from '../components/Header';
+import Header from '@/components/Header';
 import dynamic from 'next/dynamic';
 import { 
   DomainHit, 

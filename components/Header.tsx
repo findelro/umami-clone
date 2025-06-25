@@ -26,4 +26,4 @@ export default function Header({ title = "Domain Analytics Dashboard" }: HeaderP
       </div>
     </header>
   );
-}
+} 

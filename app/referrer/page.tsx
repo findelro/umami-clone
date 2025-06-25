@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { useSearchParams } from 'next/navigation';
 import DateRangePicker from '@/components/DateRangePicker';
 import StatsCard from '@/components/StatsCard';
-import Header from '../components/Header';
+import Header from '@/components/Header';
 import { ReferrerTargetStats } from '@/lib/types';
 
 function ReferrerContent() {
