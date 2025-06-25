@@ -31,7 +31,7 @@ export default function TableWithPercentage<T extends TableData>({
   nameKey,
   showFlags = false,
   className = '',
-  namePlaceholder = 'Unknown',
+  namePlaceholder = 'Other',
   startDate,
   endDate,
   onItemClick,
@@ -261,7 +261,7 @@ export default function TableWithPercentage<T extends TableData>({
                   {showFlags ? (
                     <div className="flex items-center">
                       <span className="mr-2 w-5 h-5 flex items-center justify-center">{getCountryFlag(keyValue)}</span>
-                      <span>{keyValue === 'ZZ' ? 'Unknown' : (countries[keyValue.toUpperCase() as keyof typeof countries]?.name || 'Unknown')}</span>
+                      <span>{keyValue === 'ZZ' ? 'Other' : (countries[keyValue.toUpperCase() as keyof typeof countries]?.name || 'Other')}</span>
                     </div>
                   ) : (
                     renderNameCell(item, index, keyValue, displayName)

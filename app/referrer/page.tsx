@@ -72,7 +72,7 @@ function ReferrerContent() {
 
   return (
     <>
-      <Header title={`Referrer Analysis: ${referrerDomain || 'Unknown'}`} />
+      <Header title={`Referrer Analysis: ${referrerDomain || 'Other'}`} />
       <main>
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="space-y-6">

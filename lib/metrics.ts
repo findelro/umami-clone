@@ -305,7 +305,7 @@ export const getBrowserStatsForDomain = async (domain: string, startDate: string
   const browsers: Record<string, { views: number, ips: Set<string> }> = {};
   
   filteredData.forEach(item => {
-    const browser = item.browser_normalized === 'Bot' ? 'Bot' : (item.browser_normalized || 'Unknown');
+    const browser = item.browser_normalized === 'Bot' ? 'Bot' : (item.browser_normalized || 'Other');
     
     if (!browsers[browser]) {
       browsers[browser] = { views: 0, ips: new Set() };
@@ -349,7 +349,7 @@ export const getOSStatsForDomain = async (domain: string, startDate: string, end
   const operatingSystems: Record<string, { views: number, ips: Set<string> }> = {};
   
   filteredData.forEach(item => {
-    const os = item.browser_normalized === 'Bot' ? 'Bot' : (item.os_normalized || 'Unknown');
+    const os = item.browser_normalized === 'Bot' ? 'Bot' : (item.os_normalized || 'Other');
     
     if (!operatingSystems[os]) {
       operatingSystems[os] = { views: 0, ips: new Set() };
@@ -393,7 +393,7 @@ export const getDeviceStatsForDomain = async (domain: string, startDate: string,
   const devices: Record<string, { views: number, ips: Set<string> }> = {};
   
   filteredData.forEach(item => {
-    const device = item.browser_normalized === 'Bot' ? 'Bot' : (item.device_normalized || 'Unknown');
+    const device = item.browser_normalized === 'Bot' ? 'Bot' : (item.device_normalized || 'Other');
     
     if (!devices[device]) {
       devices[device] = { views: 0, ips: new Set() };
@@ -437,7 +437,7 @@ export const getCountryStatsForDomain = async (domain: string, startDate: string
   const countries: Record<string, { views: number, ips: Set<string> }> = {};
   
   filteredData.forEach(item => {
-    const country = item.country || 'Unknown';
+    const country = item.country || 'Other';
 
     if (!countries[country]) {
       countries[country] = { views: 0, ips: new Set() };

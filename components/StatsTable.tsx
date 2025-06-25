@@ -19,7 +19,7 @@ interface StatsTableProps<T extends StatsData> {
 export default function StatsTable<T extends StatsData>({
   data,
   nameKey,
-  namePlaceholder = 'Unknown',
+  namePlaceholder = 'Other',
   className = '',
   showHeaders = true,
   isCountryTable = false,

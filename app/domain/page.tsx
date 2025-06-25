@@ -147,7 +147,7 @@ function DomainContent() {
 
   return (
     <>
-      <Header title={`Domain Analysis: ${domain || 'Unknown'}`} />
+      <Header title={`Domain Analysis: ${domain || 'Other'}`} />
       <main>
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="space-y-6">
